@@ -115,10 +115,31 @@
       },
 
       tileClick: function (tile) {
-        this.stones.push({ x: tile.x, y: tile.y, team: 'black' })
+        fetch('http:\\localhost:3000', {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ x: tile.x / 10, y: tile.y / 10, team: 'black' })
+        }).then(async response => {
+          if (response.status === 200) {
+            return response.json();
+          }
+          
+          const text = await response.text();
+          const error = new Error(`${response.statusText} (${response.status}): \n${text}`);
+          return Promise.reject(error);
+        }).then((stone) => {
+          this.stones.push(stone);
+        }).catch((error) => {
+          alert(error);
+          console.log(error);
+        });
       }
     }
-  })
+  });
 </script>
 
 </html>
