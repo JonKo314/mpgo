@@ -31,7 +31,16 @@
 
   <body>
     <div id="app">
-      <p>{{ message }}</p>
+      <div>
+        <p>{{ message }}</p>
+        <label>
+          <span>Play as:</span>
+          <select v-model="playAs">
+            <option value="black">Black</option>
+            <option value="white">White</option>
+          </select>
+        </label>
+      </div>
       <svg viewBox="0 0 100 100" height="400" width="400">
         <circle
           v-for="mark in marks"
@@ -91,7 +100,8 @@
     var app = new Vue({
       el: "#app",
       data: {
-        message: "Hello Vue!",
+        message: "Welcome to parallel multiplayer Go!",
+        playAs: "black",
         stones: [],
         marks: [
           { x: 30, y: 30 },
@@ -161,7 +171,7 @@
             body: JSON.stringify({
               x: tile.x / 10,
               y: tile.y / 10,
-              team: "black",
+              team: this.playAs,
             }),
           })
             .then(async (response) => {
