@@ -1,0 +1,18 @@
+mpgo/mmgo
+parallel massive multiplayer corresponcence go
+
+Players may decide during each turn, where their next move should be played.
+At the end of each turn the gamemaster/server places the stones for all players, conflicts need to be resolved.
+
+Variant A: Players may not play close to their previous moves as long as other players are able to play close to them and do so.
+Variant B: Players may not play far away from their stones.
+Variant C: During conflict resolving players gain privileged treatment, when they were treated badly before.
+Variant D: Players may play more stones per turn, when they have more territory/prisoners.
+Variant E: Per turn each player is assigned an area in which they are allowed to play.
+Variant F: Moves are only valid, if they would be valid on their own.
+Variant G: A connected group of stones may only be touched by one new hostile stone every turn.
+
+Conflict resolvement:
+- Random
+- Passes
+- Priority by closest own stone
