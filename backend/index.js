@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const logger = require("morgan");
 
 const Stone = require("./models/stone");
+const GameState = require("./models/gameState");
 
 const app = express();
 const port = 3000;
@@ -40,8 +41,36 @@ mongoose.connect("mongodb://localhost/mpgo", {
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
-db.once("open", () => {
+db.once("open", async () => {
   console.log("MongoDB connection opened");
+
+  // TODO: Check for race conditions and other dangerous things
+  const state =
+    (await GameState.findOne()) ||
+    new GameState({
+      turnCounter: 1,
+      endTurn: new Date(Date.now() + 60000),
+    });
+  const confirmStones = async () => {
+    const pendingStones = await Stone.find({ isPending: true });
+    // TODO: Place stones, handle conflicts and captures
+    pendingStones.forEach(async (stone) => {
+      stone.isPending = false;
+      await stone.save();
+    });
+    state.turnEnd = new Date(Date.now() + 60000);
+    state.turnCounter++;
+    await state.save();
+    console.log(
+      `State saved. Turn: ${state.turnCounter} End: ${state.turnEnd}`
+    );
+    setTimeout(confirmStones, 60000);
+  };
+  if (state.turnEnd < Date.now()) {
+    confirmStones();
+  } else {
+    setTimeout(confirmStones, 60000);
+  }
 });
 
 app.listen(port, () => {

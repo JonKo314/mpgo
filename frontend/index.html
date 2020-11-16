@@ -24,6 +24,11 @@
         fill: white;
         stroke: black;
       }
+
+      circle.pending {
+        fill-opacity: 0.5;
+        stroke-opacity: 0.5;
+      }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
@@ -87,7 +92,7 @@
         </g>
         <circle
           v-for="stone in stones"
-          v-bind:class="stone.team"
+          v-bind:class="[stone.team, {pending: stone.isPending}]"
           v-bind:cx="10 * stone.x"
           v-bind:cy="10 * stone.y"
           r="4.5"
@@ -172,6 +177,7 @@
               x: tile.x / 10,
               y: tile.y / 10,
               team: this.playAs,
+              isPending: true,
             }),
           })
             .then(async (response) => {
