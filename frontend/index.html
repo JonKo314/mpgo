@@ -38,6 +38,8 @@
     <div id="app">
       <div>
         <p>{{ message }}</p>
+        <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
+        <span>Turn {{ turnCounter }}</span>
         <label>
           <span>Play as:</span>
           <select v-model="playAs">
@@ -116,11 +118,15 @@
           { x: 70, y: 70 },
         ],
         tiles: [],
+        turnCounter: 0,
+        turnEnd: null,
+        timeLeft: Infinity,
+        countdownInterval: null,
       },
 
       created: function () {
         this.createTiles();
-        this.getStones();
+        this.update();
       },
 
       methods: {
@@ -139,6 +145,38 @@
               });
             }
           }
+        },
+
+        update: function () {
+          this.getGameSate();
+          this.getStones();
+        },
+
+        getGameSate: function () {
+          fetch("http://localhost:3000/gameState", {
+            method: "GET",
+            mode: "cors",
+            cache: "reload",
+          })
+            .then((response) => {
+              if (response.status === 200) {
+                return response.json();
+              }
+
+              return Promise.reject(
+                new Error(response.statusText + "(" + response.status + ")")
+              );
+            })
+            .then((gameState) => {
+              this.turnCounter = gameState.turnCounter;
+              this.turnEnd = new Date(gameState.turnEnd);
+              this.startCountdown();
+            })
+            .catch((error) => {
+              alert(error);
+              console.log(error);
+              this.stopCountdown();
+            });
         },
 
         getStones: function () {
@@ -198,6 +236,23 @@
               alert(error);
               console.log(error);
             });
+        },
+
+        startCountdown: function () {
+          this.countdownInterval = setInterval(() => {
+            this.timeLeft = this.turnEnd - new Date();
+            if (this.timeLeft < 0) {
+              this.stopCountdown();
+              this.update();
+            }
+          }, 30);
+        },
+
+        stopCountdown: function () {
+          if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+          }
         },
       },
     });

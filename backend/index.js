@@ -13,9 +13,16 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(cors({ origin: true })); // TODO: Is this secure?
 
+// TODO: What happens if this is called while turn change is in progress?
 app.get("/", async (req, res) => {
   const stones = await Stone.find();
   res.json(stones);
+});
+
+// TODO: What happens if this is called while turn change is in progress?
+app.get("/gameState", async (req, res) => {
+  const state = await GameState.findOne();
+  res.json(state);
 });
 
 app.post("/", async (req, res, next) => {
