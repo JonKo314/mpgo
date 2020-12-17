@@ -5,6 +5,7 @@ const logger = require("morgan");
 
 const Stone = require("./models/stone");
 const GameState = require("./models/gameState");
+const GameLogic = require("./gameLogic");
 
 const app = express();
 const port = 3000;
@@ -28,7 +29,7 @@ app.get("/gameState", async (req, res) => {
 app.post("/", async (req, res, next) => {
   try {
     const stone = new Stone(req.body);
-    await stone.save();
+    await GameLogic.addStone(stone);
     res.status(200).json(stone);
   } catch (err) {
     if (err.errors && err.message) {
@@ -52,32 +53,7 @@ db.once("open", async () => {
   console.log("MongoDB connection opened");
 
   // TODO: Check for race conditions and other dangerous things
-  const state =
-    (await GameState.findOne()) ||
-    new GameState({
-      turnCounter: 1,
-      endTurn: new Date(Date.now() + 60000),
-    });
-  const confirmStones = async () => {
-    const pendingStones = await Stone.find({ isPending: true });
-    // TODO: Place stones, handle conflicts and captures
-    pendingStones.forEach(async (stone) => {
-      stone.isPending = false;
-      await stone.save();
-    });
-    state.turnEnd = new Date(Date.now() + 60000);
-    state.turnCounter++;
-    await state.save();
-    console.log(
-      `State saved. Turn: ${state.turnCounter} End: ${state.turnEnd}`
-    );
-    setTimeout(confirmStones, 60000);
-  };
-  if (state.turnEnd < Date.now()) {
-    confirmStones();
-  } else {
-    setTimeout(confirmStones, state.turnEnd - Date.now());
-  }
+  await GameLogic.initialize();
 });
 
 app.listen(port, () => {
