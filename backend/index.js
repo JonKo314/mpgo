@@ -76,7 +76,7 @@ db.once("open", async () => {
   if (state.turnEnd < Date.now()) {
     confirmStones();
   } else {
-    setTimeout(confirmStones, 60000);
+    setTimeout(confirmStones, state.turnEnd - Date.now());
   }
 });
 
