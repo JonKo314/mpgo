@@ -120,8 +120,27 @@
         tiles: [],
         turnCounter: 0,
         turnEnd: null,
-        timeLeft: Infinity,
-        countdownInterval: null,
+        millisecondsLeft: Infinity,
+        clockTimeout: null,
+      },
+
+      computed: {
+        timeLeft: function () {
+          const twoDigits = (a) => a.toString().padStart(2, "0");
+          const prettyTime = (a, b) => twoDigits(a) + ":" + twoDigits(b);
+
+          if (this.millisecondsLeft < 0) {
+            return prettyTime(0, 0);
+          }
+
+          const hours = Math.floor(this.millisecondsLeft / 36e5);
+          const minutes = Math.floor((this.millisecondsLeft % 36e5) / 6e4);
+          const seconds = Math.floor((this.millisecondsLeft % 6e4) / 1e3);
+
+          return hours > 0
+            ? prettyTime(hours, minutes)
+            : prettyTime(minutes, seconds);
+        },
       },
 
       created: function () {
@@ -170,12 +189,13 @@
             .then((gameState) => {
               this.turnCounter = gameState.turnCounter;
               this.turnEnd = new Date(gameState.turnEnd);
-              this.startCountdown();
+              this.millisecondsLeft = this.turnEnd - new Date();
+              setTimeout(this.update, this.millisecondsLeft);
+              this.updateTurnClock();
             })
             .catch((error) => {
               alert(error);
               console.log(error);
-              this.stopCountdown();
             });
         },
 
@@ -238,21 +258,21 @@
             });
         },
 
-        startCountdown: function () {
-          this.countdownInterval = setInterval(() => {
-            this.timeLeft = this.turnEnd - new Date();
-            if (this.timeLeft < 0) {
-              this.stopCountdown();
-              this.update();
-            }
-          }, 30);
-        },
-
-        stopCountdown: function () {
-          if (this.countdownInterval) {
-            clearInterval(this.countdownInterval);
-            this.countdownInterval = null;
+        updateTurnClock: function () {
+          this.millisecondsLeft = this.turnEnd - new Date();
+          if (this.millisecondsLeft <= 0) {
+            return;
           }
+
+          const millisecondsUntilClockUpdate =
+            this.millisecondsLeft > 6e5
+              ? this.millisecondsLeft % 6e5
+              : this.millisecondsLeft % 1e3;
+
+          this.clockTimeout = setTimeout(
+            this.updateTurnClock,
+            millisecondsUntilClockUpdate
+          );
         },
       },
     });
