@@ -16,3 +16,4 @@ Conflict resolvement:
 - Random
 - Passes
 - Priority by closest own stone
+- Priority by distance to previous move(s)
