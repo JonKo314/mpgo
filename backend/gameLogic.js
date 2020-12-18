@@ -1,21 +1,25 @@
 const GameState = require("./models/gameState");
 const Stone = require("./models/stone");
 
+let state;
+
 exports.addStone = async function (stone) {
   await stone.save();
 };
 
 // TODO: Function naming
 exports.initialize = async function () {
-  const state =
-    (await GameState.findOne()) ||
-    new GameState({
+  state = await GameState.findOne();
+  if (!state) {
+    state = new GameState({
       turnCounter: 1,
       turnEnd: new Date(Date.now() + 60000),
     });
+    await state.save();
+  }
+
   console.log("GameState loaded:\n" + state);
   const confirmStones = async () => {
-    const pendingStones = await Stone.find({ isPending: true });
     // TODO: Place stones, handle conflicts and captures
     pendingStones.forEach(async (stone) => {
       stone.isPending = false;
