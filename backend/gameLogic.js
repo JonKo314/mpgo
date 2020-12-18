@@ -11,7 +11,7 @@ exports.initialize = async function () {
     (await GameState.findOne()) ||
     new GameState({
       turnCounter: 1,
-      endTurn: new Date(Date.now() + 60000),
+      turnEnd: new Date(Date.now() + 60000),
     });
   console.log("GameState loaded:\n" + state);
   const confirmStones = async () => {
