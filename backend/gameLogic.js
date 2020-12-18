@@ -2,9 +2,12 @@ const GameState = require("./models/gameState");
 const Stone = require("./models/stone");
 
 let state;
+let currentStones = [];
+let pendingStones = [];
 
 exports.addStone = async function (stone) {
   await stone.save();
+  pendingStones.push(stone);
 };
 
 // TODO: Function naming
@@ -19,12 +22,18 @@ exports.initialize = async function () {
   }
 
   console.log("GameState loaded:\n" + state);
+
+  currentStones = await Stone.find({ isPending: false });
+  pendingStones = await Stone.find({ isPending: true });
+
   const confirmStones = async () => {
     // TODO: Place stones, handle conflicts and captures
     pendingStones.forEach(async (stone) => {
       stone.isPending = false;
       await stone.save();
+      currentStones.push(stone);
     });
+    pendingStones.length = 0;
     state.turnEnd = new Date(Date.now() + 60000);
     state.turnCounter++;
     await state.save();
