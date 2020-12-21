@@ -5,6 +5,8 @@ const StoneSchema = new mongoose.Schema({
   y: { type: Number, required: true },
   team: { type: String, required: true, maxlength: 20 },
   isPending: { type: Boolean, required: true },
+  placedOnTurn: { type: Number, required: true },
+  removedOnTurn: { type: Number, required: false },
 });
 
 module.exports = mongoose.model("Stone", StoneSchema);

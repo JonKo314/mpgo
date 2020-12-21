@@ -16,7 +16,7 @@ app.use(cors({ origin: true })); // TODO: Is this secure?
 
 // TODO: What happens if this is called while turn change is in progress?
 app.get("/", async (req, res) => {
-  const stones = await Stone.find();
+  const stones = await Stone.find({ removedOnTurn: null });
   res.json(stones);
 });
 
