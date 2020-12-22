@@ -63,6 +63,7 @@ exports.initialize = async function () {
     conflictedStones.length = 0;
 
     confirmedStones.forEach(async (stone) => {
+      board[stone.y][stone.x].pendingStones.length = 0;
       board[stone.y][stone.x].stone = stone;
       stone.isPending = false;
       await stone.save();
