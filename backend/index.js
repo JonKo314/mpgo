@@ -15,8 +15,8 @@ app.use(express.json());
 app.use(cors({ origin: true })); // TODO: Is this secure?
 
 // TODO: What happens if this is called while turn change is in progress?
-app.get("/", async (req, res) => {
-  const stones = await Stone.find({ removedOnTurn: null });
+app.get("/", (req, res) => {
+  const stones = GameLogic.getStones().filter((stone) => !stone.removedOnTurn);
   res.json(stones);
 });
 

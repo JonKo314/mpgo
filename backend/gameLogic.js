@@ -1,5 +1,5 @@
+const Game = require("./models/game");
 const GameState = require("./models/gameState");
-const Stone = require("./models/stone");
 
 // TODO: Different board sizes and types (e.g. toroidal or with holes)
 const BOARD_SIZE = 9;
@@ -7,30 +7,38 @@ const board = [];
 const aliveMap = [];
 const visitedMap = [];
 
+let game;
 let state;
-let currentStones = [];
-let pendingStones = [];
-let confirmedStones = [];
-let conflictedStones = [];
-let changedStones = new Set();
 
 exports.addStone = async function (stone) {
-  if (board[stone.y][stone.x].stone) {
+  if (
+    game.currentStones.some(
+      (currentStone) => currentStone.x === stone.x && currentStone.y === stone.y
+    )
+  ) {
     throw new Error(
       `Stone rejected. Position (${x}, ${y}) is already occupied.`
     );
   }
 
+  stone.isPending = true;
   stone.placedOnTurn = state.turnCounter;
-  await stone.save();
+  game.stones.push(stone);
+  await game.save();
+};
 
-  // TODO: Beware redundancies
-  pendingStones.push(stone);
-  board[stone.y][stone.x].pendingStones.push(stone);
+exports.getStones = function () {
+  return game.stones.filter((stone) => !stone.removedOnTurn);
 };
 
 // TODO: Function naming
 exports.initialize = async function () {
+  game = await Game.findOne();
+  if (!game) {
+    game = new Game({ stones: [] });
+    await game.save();
+  }
+
   state = await GameState.findOne();
   if (!state) {
     state = new GameState({
@@ -42,92 +50,76 @@ exports.initialize = async function () {
 
   console.log("GameState loaded:\n" + state);
 
-  currentStones = await Stone.find({ isPending: false, removedOnTurn: null });
-  pendingStones = await Stone.find({ isPending: true });
-
-  initializeBoard();
-
-  const confirmStones = async () => {
-    changedStones.length = 0;
-
-    // TODO: Place stones, handle conflicts and captures
-    pendingStones.forEach((stone) => {
-      if (board[stone.y][stone.x].pendingStones.length > 1) {
-        conflictedStones.push(stone);
-      } else {
-        confirmedStones.push(stone);
-      }
-    });
-    pendingStones.length = 0;
-
-    conflictedStones.forEach((stone) => {
-      board[stone.y][stone.x].pendingStones.length = 0;
-      stone.isPending = false;
-      stone.removedOnTurn = state.turnCounter;
-      changedStones.add(stone);
-    });
-    conflictedStones.length = 0;
-
-    confirmedStones.forEach((stone) => {
-      board[stone.y][stone.x].pendingStones.length = 0;
-      board[stone.y][stone.x].stone = stone;
-      stone.isPending = false;
-      currentStones.push(stone);
-      changedStones.add(stone);
-    });
-    confirmedStones.length = 0;
-
-    checkAllLiberties();
-
-    let survivingStones = [];
-    currentStones.forEach((stone) => {
-      if (
-        stone.placedOnTurn < state.turnCounter &&
-        !aliveMap[stone.y][stone.x]
-      ) {
-        board[stone.y][stone.x].stone = null;
-        stone.removedOnTurn = state.turnCounter;
-        changedStones.add(stone);
-      } else {
-        survivingStones.push(stone);
-      }
-    });
-    currentStones = survivingStones;
-
-    checkAllLiberties();
-
-    survivingStones = [];
-    currentStones.forEach((stone) => {
-      if (!aliveMap[stone.y][stone.x]) {
-        board[stone.y][stone.x].stone = null;
-        stone.removedOnTurn = state.turnCounter;
-        changedStones.add(stone);
-      } else {
-        survivingStones.push(stone);
-      }
-    });
-    currentStones = survivingStones;
-
-    state.turnEnd = new Date(Date.now() + 60000);
-    state.turnCounter++;
-
-    // TODO: Race conditions for all those calls of .save()
-    // Maybe use a single document, cross document dependencies might be evil
-    // Or use transactions, but those might be rather new.
-    changedStones.forEach(async (stone) => await stone.save());
-    await state.save();
-    console.log(
-      `State saved. Turn: ${state.turnCounter} End: ${state.turnEnd}`
-    );
-
-    setTimeout(confirmStones, 60000);
-  };
   if (state.turnEnd < Date.now()) {
     confirmStones();
   } else {
     setTimeout(confirmStones, state.turnEnd - Date.now());
   }
 };
+
+// TODO: Function naming
+async function confirmStones() {
+  initializeBoard();
+
+  let currentStones = game.currentStones;
+  let pendingStones = game.pendingStones;
+  let conflictedStones = [];
+  let confirmedStones = [];
+
+  pendingStones.forEach((stone) => {
+    if (board[stone.y][stone.x].pendingStones.length > 1) {
+      conflictedStones.push(stone);
+    } else {
+      confirmedStones.push(stone);
+    }
+  });
+
+  // TODO: Elaborate conflict resolving
+  conflictedStones.forEach((stone) => {
+    board[stone.y][stone.x].pendingStones.length = 0;
+    stone.isPending = false;
+    stone.removedOnTurn = state.turnCounter;
+  });
+
+  confirmedStones.forEach((stone) => {
+    board[stone.y][stone.x].pendingStones.length = 0;
+    board[stone.y][stone.x].stone = stone;
+    stone.isPending = false;
+    currentStones.push(stone);
+  });
+
+  checkAllLiberties();
+
+  let survivingStones = [];
+  currentStones.forEach((stone) => {
+    if (stone.placedOnTurn < state.turnCounter && !aliveMap[stone.y][stone.x]) {
+      board[stone.y][stone.x].stone = null;
+      stone.removedOnTurn = state.turnCounter;
+    } else {
+      survivingStones.push(stone);
+    }
+  });
+  currentStones = survivingStones;
+
+  checkAllLiberties();
+
+  survivingStones = [];
+  currentStones.forEach((stone) => {
+    if (!aliveMap[stone.y][stone.x]) {
+      board[stone.y][stone.x].stone = null;
+      stone.removedOnTurn = state.turnCounter;
+    }
+  });
+
+  state.turnEnd = new Date(Date.now() + 60000);
+  state.turnCounter++;
+
+  await game.save();
+  await state.save();
+  console.log(`State saved. Turn: ${state.turnCounter} End: ${state.turnEnd}`);
+
+  setTimeout(confirmStones, 60000);
+}
 
 function initializeBoard() {
   board.length = 0;
@@ -138,10 +130,11 @@ function initializeBoard() {
     }
   }
 
-  currentStones.forEach((stone) => {
+  // TODO: Beware redundancies
+  game.currentStones.forEach((stone) => {
     board[stone.y][stone.x].stone = stone;
   });
-  pendingStones.forEach((stone) => {
+  game.pendingStones.forEach((stone) => {
     board[stone.y][stone.x].pendingStones.push(stone);
   });
 }
@@ -159,7 +152,7 @@ function checkAllLiberties() {
     visitedMap[y].length = BOARD_SIZE;
   }
 
-  currentStones.forEach((stone) => {
+  game.currentStones.forEach((stone) => {
     hasLiberty(stone);
   });
 }
