@@ -1,0 +1,9 @@
+- restrict moves per turn
+- more games
+- more teams
+    - hide pending moves other teams
+- counting
+- conflict resolvement
+- variants
+- accounts
+- board shapes and sizes
