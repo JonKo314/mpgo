@@ -11,6 +11,7 @@
             "skipFiles": [
                 "<node_internals>/**"
             ],
+            "outputCapture": "std",
             "program": "${workspaceFolder}\\backend\\index.js"
         }
     ]
