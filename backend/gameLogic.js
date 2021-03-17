@@ -21,6 +21,17 @@ exports.addStone = async function (stone) {
     );
   }
 
+  const allowedNewStonesCount = 1;
+  if (
+    game.pendingStones.filter(
+      (pendingStone) => pendingStone.team === stone.team
+    ).length >= allowedNewStonesCount
+  ) {
+    throw new Error(
+      "Stone rejected. No more stones allowed for that team this turn."
+    );
+  }
+
   stone.isPending = true;
   stone.placedOnTurn = state.turnCounter;
   game.stones.push(stone);
