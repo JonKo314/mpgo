@@ -32,12 +32,7 @@ app.post("/", async (req, res, next) => {
     await GameLogic.addStone(stone);
     res.status(200).json(stone);
   } catch (err) {
-    if (err.errors && err.message) {
-      // Probably a validation error by mongoose and the client's fault
-      res.status(400).send(err.message);
-    } else {
-      throw err;
-    }
+    return next(err);
   }
 });
 
