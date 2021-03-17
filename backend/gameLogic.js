@@ -17,7 +17,7 @@ exports.addStone = async function (stone) {
     )
   ) {
     throw new Error(
-      `Stone rejected. Position (${x}, ${y}) is already occupied.`
+      `Stone rejected. Position (${stone.x}, ${stone.y}) is already occupied.`
     );
   }
 
