@@ -104,6 +104,7 @@
           v-bind:cx="10 * stone.x"
           v-bind:cy="10 * stone.y"
           r="4.5"
+          v-on:click="stoneClick(stone)"
         />
       </svg>
     </div>
@@ -258,6 +259,38 @@
             .then((stone) => {
               this.stones.push(stone);
             })
+            .catch((error) => {
+              alert(error);
+              console.log(error);
+            });
+        },
+
+        stoneClick: function (stone) {
+          if (!stone.isPending) {
+            return;
+          }
+
+          fetch("http://localhost:3000/removePendingStone", {
+            method: "POST",
+            mode: "cors",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(stone),
+          })
+            .then(async (response) => {
+              if (response.status === 200) {
+                return response.json();
+              }
+
+              const text = await response.text();
+              const error = new Error(
+                `${response.statusText} (${response.status}): \n${text}`
+              );
+              return Promise.reject(error);
+            })
+            .then(() => this.stones.splice(this.stones.indexOf(stone), 1))
             .catch((error) => {
               alert(error);
               console.log(error);

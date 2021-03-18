@@ -36,6 +36,16 @@ app.post("/", async (req, res, next) => {
   }
 });
 
+app.post("/removePendingStone", async (req, res, next) => {
+  try {
+    const stone = new Stone(req.body);
+    await GameLogic.removePendingStone(stone);
+    res.status(200).json(stone);
+  } catch (err) {
+    return next(err);
+  }
+});
+
 mongoose.connect("mongodb://localhost/mpgo", {
   useNewUrlParser: true,
   useUnifiedTopology: true,

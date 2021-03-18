@@ -38,6 +38,24 @@ exports.addStone = async function (stone) {
   await game.save();
 };
 
+exports.removePendingStone = async function (stone) {
+  const savedStone = game.stones.find(
+    (savedStone) =>
+      stone.x === savedStone.x &&
+      stone.y === savedStone.y &&
+      stone.team === savedStone.team &&
+      savedStone.isPending
+  );
+  if (savedStone) {
+    savedStone.remove();
+    await game.save();
+  } else {
+    throw new Error(
+      `No stone for team ${stone.team} at (${stone.x}, ${stone.y}) to remove.`
+    );
+  }
+};
+
 exports.getStones = function () {
   return game.stones.filter((stone) => !stone.removedOnTurn);
 };
