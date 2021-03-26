@@ -35,6 +35,25 @@
 
   <body>
     <div id="app">
+      <div v-if="!user">
+        <label>
+          <span>Username:</span>
+          <input type="text" v-model="username" />
+        </label>
+        <label>
+          <span>Password:</span>
+          <input type="password" v-model="password" />
+        </label>
+        <button type="button" v-on:click="login()">Login</button>
+        <button type="button" v-on:click="register()">Register</button>
+      </div>
+
+      <div v-if="user">
+        <span>Playing as {{ user.name }}</span>
+        <button type="button" v-on:click="logout()">Logout</button>
+        <!-- TODO: colors -->
+      </div>
+
       <div>
         <p>{{ message }}</p>
         <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
@@ -116,6 +135,9 @@
       data: {
         message: "Welcome to parallel multiplayer Go!",
         playAs: "black",
+        username: "",
+        password: "",
+        user: null,
         stones: [],
         marks: [
           { x: 20, y: 20 },
@@ -153,6 +175,7 @@
       created: function () {
         this.createTiles();
         this.update();
+        this.checkLogin();
       },
 
       methods: {
@@ -312,6 +335,129 @@
             this.updateTurnClock,
             millisecondsUntilClockUpdate
           );
+        },
+
+        checkLogin: function () {
+          fetch("http://localhost:3000/checkLogin", {
+            method: "GET",
+            mode: "cors",
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          })
+            .then(async (response) => {
+              if (response.status === 200) {
+                return response.json();
+              }
+
+              const text = await response.text();
+              const error = new Error(
+                `${response.statusText} (${response.status}): \n${text}`
+              );
+              return Promise.reject(error);
+            })
+            .then((user) => {
+              this.user = user;
+            })
+            .catch((error) => {
+              alert(error);
+              console.log(error);
+            });
+        },
+
+        login: function () {
+          fetch("http://localhost:3000/login", {
+            method: "POST",
+            mode: "cors",
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: this.username,
+              password: this.password,
+            }),
+          })
+            .then(async (response) => {
+              if (response.status === 200) {
+                return response.json();
+              }
+
+              const text = await response.text();
+              const error = new Error(
+                `${response.statusText} (${response.status}): \n${text}`
+              );
+              return Promise.reject(error);
+            })
+            .then((user) => {
+              this.user = user;
+              this.password = null;
+            })
+            .catch((error) => {
+              alert(error);
+              console.log(error);
+            });
+        },
+
+        register: function () {
+          fetch("http://localhost:3000/register", {
+            method: "POST",
+            mode: "cors",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: this.username,
+              password: this.password,
+            }),
+          })
+            .then(async (response) => {
+              if (response.status === 200) {
+                return Promise.reject(new Error("Not implemented")); // TODO
+              }
+
+              const text = await response.text();
+              const error = new Error(
+                `${response.statusText} (${response.status}): \n${text}`
+              );
+              return Promise.reject(error);
+            })
+            .catch((error) => {
+              alert(error);
+              console.log(error);
+            });
+        },
+
+        logout: function () {
+          fetch("http://localhost:3000/logout", {
+            method: "GET",
+            mode: "cors",
+            credentials: "include",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          })
+            .then(async (response) => {
+              if (response.status === 200) {
+                this.user = null;
+                return Promise.resolve();
+              }
+
+              const text = await response.text();
+              const error = new Error(
+                `${response.statusText} (${response.status}): \n${text}`
+              );
+              return Promise.reject(error);
+            })
+            .catch((error) => {
+              alert(error);
+              console.log(error);
+            });
         },
       },
     });
