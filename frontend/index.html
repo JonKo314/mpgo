@@ -406,6 +406,7 @@
           fetch("http://localhost:3000/register", {
             method: "POST",
             mode: "cors",
+            credentials: "include",
             headers: {
               Accept: "application/json",
               "Content-Type": "application/json",
@@ -417,7 +418,7 @@
           })
             .then(async (response) => {
               if (response.status === 200) {
-                return Promise.reject(new Error("Not implemented")); // TODO
+                return response.json();
               }
 
               const text = await response.text();
@@ -425,6 +426,10 @@
                 `${response.statusText} (${response.status}): \n${text}`
               );
               return Promise.reject(error);
+            })
+            .then((user) => {
+              this.user = user;
+              this.password = null;
             })
             .catch((error) => {
               alert(error);

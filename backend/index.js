@@ -137,14 +137,19 @@ app.post("/register", async (req, res, next) => {
       throw new Error("Username already taken.");
     }
 
-    await new User({
+    const user = await new User({
       name: credentials.username,
       passwordHash: await bcrypt.hash(credentials.password, saltRounds),
     }).save();
+    delete user._doc.passwordHash;
 
-    // TODO: Log in user for now
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
 
-    res.status(200).json({});
+      res.json(user);
+    });
   } catch (err) {
     return next(err);
   }
