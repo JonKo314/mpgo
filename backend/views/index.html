@@ -14,17 +14,11 @@
         stroke: black;
       }
 
-      circle.black {
-        fill: black;
+      circle.stone {
         stroke: black;
       }
 
-      circle.white {
-        fill: white;
-        stroke: black;
-      }
-
-      circle.pending {
+      circle.stone.pending {
         fill-opacity: 0.5;
         stroke-opacity: 0.5;
       }
@@ -51,20 +45,16 @@
       <div v-if="user">
         <span>Playing as {{ user.name }}</span>
         <button type="button" v-on:click="logout()">Logout</button>
-        <!-- TODO: colors -->
+        <label>
+          <span>Color:</span>
+          <input type="color" v-model="user.color" v-on:change="setColor()" />
+        </label>
       </div>
 
       <div>
         <p>{{ message }}</p>
         <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
         <span>Turn {{ turnCounter }}</span>
-        <label>
-          <span>Play as:</span>
-          <select v-model="playAs">
-            <option value="black">Black</option>
-            <option value="white">White</option>
-          </select>
-        </label>
       </div>
       <svg viewBox="-10 -10 100 100" height="400" width="400">
         <circle
@@ -119,9 +109,10 @@
         </g>
         <circle
           v-for="stone in stones"
-          v-bind:class="[stone.team, {pending: stone.isPending}]"
+          v-bind:class="['stone', {pending: stone.isPending}]"
           v-bind:cx="10 * stone.x"
           v-bind:cy="10 * stone.y"
+          v-bind:fill="stone.user.color"
           r="4.5"
           v-on:click="stoneClick(stone)"
         />
@@ -134,7 +125,6 @@
       el: "#app",
       data: {
         message: "Welcome to parallel multiplayer Go!",
-        playAs: "black",
         username: "",
         password: "",
         user: null,
@@ -261,7 +251,7 @@
             body: JSON.stringify({
               x: tile.x / 10,
               y: tile.y / 10,
-              team: this.playAs,
+              user: this.user,
               isPending: true,
             }),
           })
@@ -438,6 +428,34 @@
             .then(async (response) => {
               if (response.status === 200) {
                 this.user = null;
+                return Promise.resolve();
+              }
+
+              const text = await response.text();
+              const error = new Error(
+                `${response.statusText} (${response.status}): \n${text}`
+              );
+              return Promise.reject(error);
+            })
+            .catch((error) => {
+              alert(error);
+              console.log(error);
+            });
+        },
+
+        setColor: function () {
+          fetch("http://localhost:3000/setColor", {
+            method: "POST",
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              color: this.user.color,
+            }),
+          })
+            .then(async (response) => {
+              if (response.status === 200) {
                 return Promise.resolve();
               }
 

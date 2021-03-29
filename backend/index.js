@@ -70,7 +70,11 @@ app.use(passport.session());
 
 // TODO: What happens if this is called while turn change is in progress?
 app.get("/", (req, res) => {
-  const stones = GameLogic.getStones().filter((stone) => !stone.removedOnTurn);
+  const stones = GameLogic.getStones().filter(
+    (stone) =>
+      !stone.removedOnTurn &&
+      (!stone.isPending || (req.user && req.user.equals(stone.user)))
+  );
   res.json(stones);
 });
 
@@ -83,6 +87,10 @@ app.get("/gameState", async (req, res) => {
 app.post("/", async (req, res, next) => {
   try {
     const stone = new Stone(req.body);
+    if (!req.user || !stone.user || !req.user.equals(stone.user)) {
+      throw new Error("Stone owner doesn't match user.");
+    }
+    stone.user = req.user;
     await GameLogic.addStone(stone);
     res.status(200).json(stone);
   } catch (err) {
@@ -93,6 +101,10 @@ app.post("/", async (req, res, next) => {
 app.post("/removePendingStone", async (req, res, next) => {
   try {
     const stone = new Stone(req.body);
+    if (!req.user || !stone.user || !req.user.equals(stone.user)) {
+      throw new Error("Stone owner doesn't match user.");
+    }
+    stone.user = req.user;
     await GameLogic.removePendingStone(stone);
     res.status(200).json(stone);
   } catch (err) {
@@ -139,6 +151,7 @@ app.post("/register", async (req, res, next) => {
     const user = await new User({
       name: credentials.username,
       passwordHash: await bcrypt.hash(credentials.password, saltRounds),
+      color: "#123456",
     }).save();
     delete user._doc.passwordHash;
 
@@ -149,6 +162,23 @@ app.post("/register", async (req, res, next) => {
 
       res.json(user);
     });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.post("/setColor", async (req, res, next) => {
+  try {
+    const color = req.body.color;
+    if (!color || !/^#[0-9a-fA-F]{6}/.test(color)) {
+      throw new Error("Invalid color");
+    }
+    if (!req.user) {
+      throw new Error("Not logged in."); // TODO: Find better way to check and respond
+    }
+    req.user.color = color;
+    await req.user.save();
+    res.sendStatus(200);
   } catch (err) {
     return next(err);
   }

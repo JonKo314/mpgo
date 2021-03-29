@@ -23,12 +23,12 @@ exports.addStone = async function (stone) {
 
   const allowedNewStonesCount = 1;
   if (
-    game.pendingStones.filter(
-      (pendingStone) => pendingStone.team === stone.team
+    game.pendingStones.filter((pendingStone) =>
+      pendingStone.user.equals(stone.user)
     ).length >= allowedNewStonesCount
   ) {
     throw new Error(
-      "Stone rejected. No more stones allowed for that team this turn."
+      "Stone rejected. No more stones allowed for that user this turn."
     );
   }
 
@@ -43,7 +43,7 @@ exports.removePendingStone = async function (stone) {
     (savedStone) =>
       stone.x === savedStone.x &&
       stone.y === savedStone.y &&
-      stone.team === savedStone.team &&
+      stone.user.equals(savedStone.user) &&
       savedStone.isPending
   );
   if (savedStone) {
@@ -51,7 +51,7 @@ exports.removePendingStone = async function (stone) {
     await game.save();
   } else {
     throw new Error(
-      `No stone for team ${stone.team} at (${stone.x}, ${stone.y}) to remove.`
+      `No stone for user ${stone.user.name} at (${stone.x}, ${stone.y}) to remove.`
     );
   }
 };
@@ -62,7 +62,10 @@ exports.getStones = function () {
 
 // TODO: Function naming
 exports.initialize = async function () {
-  game = await Game.findOne();
+  game = await Game.findOne().populate({
+    path: "stones",
+    populate: { path: "user" },
+  });
   if (!game) {
     game = new Game({ stones: [] });
     await game.save();
@@ -196,7 +199,7 @@ function hasLiberty(stone) {
     const adjacentStone = board[position.y][position.x].stone;
     return (
       !adjacentStone ||
-      (adjacentStone.team === stone.team && hasLiberty(adjacentStone))
+      (adjacentStone.user.equals(stone.user) && hasLiberty(adjacentStone))
     );
   });
 

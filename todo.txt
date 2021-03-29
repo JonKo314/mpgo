@@ -1,10 +1,7 @@
-- restrict moves per turn
+- update changed user colors in gameLogic.js
 - more games
-- more teams
-    - hide pending moves other teams
 - counting
 - conflict resolvement
 - variants
-- accounts (passportjs + bcrypt?)
-    - HTTPS
 - board shapes and sizes
+- HTTPS
