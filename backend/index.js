@@ -1,10 +1,10 @@
 const express = require("Express");
-const cors = require("cors");
 const mongoose = require("mongoose");
 const logger = require("morgan");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
+const path = require("path");
 
 const saltRounds = 10;
 
@@ -56,7 +56,6 @@ const port = 3000;
 
 app.use(logger("dev"));
 app.use(express.json());
-app.use(cors({ origin: true, credentials: true })); // TODO: Is this secure?
 
 app.use(
   require("express-session")({
@@ -153,6 +152,10 @@ app.post("/register", async (req, res, next) => {
   } catch (err) {
     return next(err);
   }
+});
+
+app.get("/index", (req, res, next) => {
+  res.sendFile(path.join(`${__dirname}/views/index.html`));
 });
 
 mongoose.connect("mongodb://localhost/mpgo", {
