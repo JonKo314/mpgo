@@ -4,7 +4,8 @@
   "description": "Backend for mpgo",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "devstart": "nodemon main.js",
+    "debug-vscode-win": "npm run devstart"
   },
   "author": "",
   "license": "ISC",
@@ -18,5 +19,8 @@
     "passport": "^0.4.1",
     "passport-local": "^1.0.0",
     "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
   }
 }
