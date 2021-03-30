@@ -191,119 +191,43 @@
           this.getStones();
         },
 
-        getGameSate: function () {
-          fetch("http://localhost:3000/gameState", {
-            method: "GET",
-            cache: "reload",
-          })
-            .then((response) => {
-              if (response.status === 200) {
-                return response.json();
-              }
-
-              return Promise.reject(
-                new Error(response.statusText + "(" + response.status + ")")
-              );
-            })
-            .then((gameState) => {
-              this.turnCounter = gameState.turnCounter;
-              this.turnEnd = new Date(gameState.turnEnd);
-              this.millisecondsLeft = this.turnEnd - new Date();
-              setTimeout(this.update, this.millisecondsLeft);
-              this.updateTurnClock();
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+        getGameSate: async function () {
+          const gameState = await this.fetch("gameState");
+          this.turnCounter = gameState.turnCounter;
+          this.turnEnd = new Date(gameState.turnEnd);
+          this.millisecondsLeft = this.turnEnd - new Date();
+          setTimeout(this.update, this.millisecondsLeft);
+          this.updateTurnClock();
         },
 
-        getStones: function () {
-          fetch("http://localhost:3000", {
-            method: "GET",
-            cache: "reload",
-          })
-            .then((response) => {
-              if (response.status === 200) {
-                return response.json();
-              }
-
-              return Promise.reject(
-                new Error(response.statusText + "(" + response.status + ")")
-              );
-            })
-            .then((stones) => {
-              this.stones = stones;
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+        getStones: async function () {
+          this.stones = await this.fetch("");
         },
 
-        tileClick: function (tile) {
-          fetch("http://localhost:3000", {
+        tileClick: async function (tile) {
+          const stone = await this.fetch("", {
             method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
               x: tile.x / 10,
               y: tile.y / 10,
               user: this.user,
               isPending: true,
             }),
-          })
-            .then(async (response) => {
-              if (response.status === 200) {
-                return response.json();
-              }
-
-              const text = await response.text();
-              const error = new Error(
-                `${response.statusText} (${response.status}): \n${text}`
-              );
-              return Promise.reject(error);
-            })
-            .then((stone) => {
-              this.stones.push(stone);
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+          });
+          this.stones.push(stone);
         },
 
-        stoneClick: function (stone) {
+        stoneClick: async function (stone) {
           if (!stone.isPending) {
             return;
           }
 
-          fetch("http://localhost:3000/removePendingStone", {
+          await this.fetch("removePendingStone", {
             method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify(stone),
-          })
-            .then(async (response) => {
-              if (response.status === 200) {
-                return response.json();
-              }
+          });
 
-              const text = await response.text();
-              const error = new Error(
-                `${response.statusText} (${response.status}): \n${text}`
-              );
-              return Promise.reject(error);
-            })
-            .then(() => this.stones.splice(this.stones.indexOf(stone), 1))
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+          this.stones.splice(this.stones.indexOf(stone), 1);
         },
 
         updateTurnClock: function () {
@@ -323,152 +247,88 @@
           );
         },
 
-        checkLogin: function () {
-          fetch("http://localhost:3000/checkLogin", {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-          })
-            .then(async (response) => {
-              if (response.status === 200) {
-                return response.json();
-              }
-
-              const text = await response.text();
-              const error = new Error(
-                `${response.statusText} (${response.status}): \n${text}`
-              );
-              return Promise.reject(error);
-            })
-            .then((user) => {
-              this.user = user;
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+        checkLogin: async function () {
+          this.user = await this.fetch("checkLogin");
         },
 
-        login: function () {
-          fetch("http://localhost:3000/login", {
+        login: async function () {
+          this.user = await this.fetch("login", {
             method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
               username: this.username,
               password: this.password,
             }),
-          })
-            .then(async (response) => {
-              if (response.status === 200) {
-                return response.json();
-              }
-
-              const text = await response.text();
-              const error = new Error(
-                `${response.statusText} (${response.status}): \n${text}`
-              );
-              return Promise.reject(error);
-            })
-            .then((user) => {
-              this.user = user;
-              this.password = null;
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+          });
+          this.password = null;
         },
 
-        register: function () {
-          fetch("http://localhost:3000/register", {
+        register: async function () {
+          this.user = await this.fetch("register", {
             method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
               username: this.username,
               password: this.password,
             }),
-          })
-            .then(async (response) => {
-              if (response.status === 200) {
-                return response.json();
-              }
-
-              const text = await response.text();
-              const error = new Error(
-                `${response.statusText} (${response.status}): \n${text}`
-              );
-              return Promise.reject(error);
-            })
-            .then((user) => {
-              this.user = user;
-              this.password = null;
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+          });
+          this.password = null;
         },
 
-        logout: function () {
-          fetch("http://localhost:3000/logout", {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-          })
-            .then(async (response) => {
-              if (response.status === 200) {
-                this.user = null;
-                return Promise.resolve();
-              }
-
-              const text = await response.text();
-              const error = new Error(
-                `${response.statusText} (${response.status}): \n${text}`
-              );
-              return Promise.reject(error);
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+        logout: async function () {
+          await this.fetch("logout");
+          this.user = null;
         },
 
-        setColor: function () {
-          fetch("http://localhost:3000/setColor", {
+        setColor: async function () {
+          await this.fetch("setColor", {
             method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
             body: JSON.stringify({
               color: this.user.color,
             }),
-          })
-            .then(async (response) => {
-              if (response.status === 200) {
-                return Promise.resolve();
-              }
+          });
+        },
 
-              const text = await response.text();
-              const error = new Error(
-                `${response.statusText} (${response.status}): \n${text}`
+        fetch: async function (resource, init) {
+          try {
+            const defaultInit = {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+            };
+            const response = await fetch(
+              `http://localhost:3000/${resource}`,
+              Object.assign(defaultInit, init)
+            );
+
+            if (!response.ok) {
+              throw new Error(
+                response.statusText + "(" + response.status + ")"
               );
-              return Promise.reject(error);
-            })
-            .catch((error) => {
-              alert(error);
-              console.log(error);
-            });
+            }
+
+            const contentType = response.headers.get("content-type");
+            if (contentType.includes("text/plain")) {
+              const text = await response.text();
+              if (text !== "OK") {
+                throw new Error(
+                  `JSON expected but response was text:\n${text}`
+                );
+              }
+              return true;
+            }
+
+            if (contentType.includes("application/json")) {
+              return await response.json();
+            }
+
+            throw new Error(
+              `Response has unknown content type: ${contentType}`
+            );
+          } catch (error) {
+            alert(error);
+            console.log(error);
+          }
         },
       },
     });
