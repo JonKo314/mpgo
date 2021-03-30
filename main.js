@@ -62,7 +62,10 @@ app.use(
     secret: "granular synthesis",
     resave: false,
     saveUninitialized: false,
-    // cookie: { secure: true }, TODO: HTTPS needed
+    cookie: {
+      sameSite: "strict",
+      // secure: true, TODO: HTTPS needed
+    },
   })
 );
 app.use(passport.initialize());
