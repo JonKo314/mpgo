@@ -12,7 +12,7 @@
                 "<node_internals>/**"
             ],
             "outputCapture": "std",
-            "program": "${workspaceFolder}\\backend\\index.js"
+            "program": "${workspaceFolder}\\main.js"
         }
     ]
 }
