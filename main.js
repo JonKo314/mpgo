@@ -155,6 +155,7 @@ app.post("/register", async (req, res, next) => {
       name: credentials.username,
       passwordHash: await bcrypt.hash(credentials.password, saltRounds),
       color: "#123456",
+      secondaryColor: "#fedcba",
     }).save();
     delete user._doc.passwordHash;
 
@@ -170,16 +171,27 @@ app.post("/register", async (req, res, next) => {
   }
 });
 
-app.post("/setColor", async (req, res, next) => {
+app.post("/setColors", async (req, res, next) => {
   try {
-    const color = req.body.color;
-    if (!color || !/^#[0-9a-fA-F]{6}/.test(color)) {
-      throw new Error("Invalid color");
-    }
     if (!req.user) {
       throw new Error("Not logged in."); // TODO: Find better way to check and respond
     }
-    req.user.color = color;
+
+    const color = req.body.color;
+    const secondaryColor = req.body.secondaryColor;
+
+    if (!color && !secondaryColor) {
+      throw new Error("No color provided.");
+    }
+
+    if (color) {
+      req.user.color = color;
+    }
+
+    if (secondaryColor) {
+      req.user.secondaryColor = secondaryColor;
+    }
+
     await req.user.save();
     res.sendStatus(200);
   } catch (err) {
