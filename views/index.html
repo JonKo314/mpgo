@@ -139,21 +139,10 @@
           />
         </g>
         <g v-for="stone in stones">
-          <circle
-            v-bind:class="['stone', {pending: stone.isPending}]"
-            v-bind:cx="10 * stone.x"
-            v-bind:cy="10 * stone.y"
-            v-bind:fill="stone.user.color"
-            r="4.5"
-            v-on:click="stoneClick(stone)"
-          />
-          <circle
-            v-if="turnCounter - stone.placedOnTurn === 1"
-            class="newStoneMarker"
-            v-bind:cx="10 * stone.x"
-            v-bind:cy="10 * stone.y"
-            r="2"
-            v-bind:stroke="stone.user.secondaryColor"
+          <go-stone
+            v-bind:stone="stone"
+            v-bind:turn-counter="turnCounter"
+            v-on:stone-click="stoneClick(stone)"
           />
         </g>
       </svg>
@@ -161,6 +150,41 @@
   </body>
 
   <script>
+    Vue.component("go-stone", {
+      props: {
+        stone: Object,
+        turnCounter: Number,
+      },
+      computed: {
+        markerColor: ({ stone }) =>
+          stone.removedOnTurn ? stone.user.color : stone.user.secondaryColor,
+        showStone: ({ stone }) => !stone.removedOnTurn,
+        showMarker: ({ stone, turnCounter }) =>
+          turnCounter - stone.placedOnTurn === 1,
+      },
+      template: `
+        <g>
+          <circle
+            v-if="showStone"
+            v-bind:class="['stone', {pending: stone.isPending}]"
+            v-bind:cx="10 * stone.x"
+            v-bind:cy="10 * stone.y"
+            v-bind:fill="stone.user.color"
+            r="4.5"
+            v-on:click="$emit('stone-click', stone)"
+          />
+          <circle
+            v-if="showMarker"
+            class="newStoneMarker"
+            v-bind:cx="10 * stone.x"
+            v-bind:cy="10 * stone.y"
+            r="2"
+            v-bind:stroke="markerColor"
+          />
+        </g>
+      `,
+    });
+
     var app = new Vue({
       el: "#app",
       data: {

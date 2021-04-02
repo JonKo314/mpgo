@@ -75,8 +75,8 @@ app.use(passport.session());
 app.get("/", (req, res) => {
   const stones = GameLogic.getStones().filter(
     (stone) =>
-      !stone.removedOnTurn &&
-      (!stone.isPending || (req.user && req.user.equals(stone.user)))
+      !(stone.isPending || stone.removedBy === "CONFLICT") ||
+      (req.user && req.user.equals(stone.user))
   );
   res.json(stones);
 });

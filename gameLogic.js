@@ -57,7 +57,7 @@ exports.removePendingStone = async function (stone) {
 };
 
 exports.getStones = function () {
-  return game.stones.filter((stone) => !stone.removedOnTurn);
+  return game.stones;
 };
 
 // TODO: Function naming
@@ -111,6 +111,7 @@ async function confirmStones() {
     board[stone.y][stone.x].pendingStones.length = 0;
     stone.isPending = false;
     stone.removedOnTurn = state.turnCounter;
+    stone.removedBy = "CONFLICT";
   });
 
   confirmedStones.forEach((stone) => {
@@ -127,6 +128,7 @@ async function confirmStones() {
     if (stone.placedOnTurn < state.turnCounter && !aliveMap[stone.y][stone.x]) {
       board[stone.y][stone.x].stone = null;
       stone.removedOnTurn = state.turnCounter;
+      stone.removedBy = "DEATH";
     } else {
       survivingStones.push(stone);
     }
@@ -140,6 +142,7 @@ async function confirmStones() {
     if (!aliveMap[stone.y][stone.x]) {
       board[stone.y][stone.x].stone = null;
       stone.removedOnTurn = state.turnCounter;
+      stone.removedBy = "DEATH";
     }
   });
 

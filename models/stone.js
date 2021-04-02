@@ -7,6 +7,7 @@ const StoneSchema = new mongoose.Schema({
   isPending: { type: Boolean, required: true },
   placedOnTurn: { type: Number, required: true },
   removedOnTurn: { type: Number, required: false },
+  removedBy: { type: String, enum: ["DEATH", "CONFLICT"] },
 });
 
 module.exports = mongoose.model("Stone", StoneSchema);
