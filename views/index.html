@@ -82,70 +82,82 @@
         </svg>
       </div>
 
-      <div>
-        <p>{{ message }}</p>
-        <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
-        <span>Turn {{ turnCounter }}</span>
+      <div v-if="!gameId">
+        <p>Select game:</p>
+        <ul>
+          <li v-for="game in games" v-on:click="setGame(game._id)">
+            {{ game._id }}
+          </li>
+        </ul>
+        <button type="button" v-on:click="newGame()">New game</button>
       </div>
-      <svg viewBox="-10 -10 100 100" height="400" width="400">
-        <circle
-          v-for="mark in marks"
-          v-bind:cx="mark.x"
-          v-bind:cy="mark.y"
-          r="1"
-        />
-        <g v-for="tile in tiles">
-          <line
-            stroke-linecap="square"
-            v-bind:x1="tile.x"
-            v-bind:y1="tile.y"
-            v-bind:x2="tile.x"
-            v-bind:y2="tile.y"
-          />
-          <line
-            v-if="tile.north"
-            v-bind:x1="tile.x"
-            v-bind:y1="tile.y"
-            v-bind:x2="tile.x"
-            v-bind:y2="tile.y - 5"
-          />
-          <line
-            v-if="tile.east"
-            v-bind:x1="tile.x"
-            v-bind:y1="tile.y"
-            v-bind:x2="tile.x + 5"
-            v-bind:y2="tile.y"
-          />
-          <line
-            v-if="tile.south"
-            v-bind:x1="tile.x"
-            v-bind:y1="tile.y"
-            v-bind:x2="tile.x"
-            v-bind:y2="tile.y + 5"
-          />
-          <line
-            v-if="tile.west"
-            v-bind:x1="tile.x"
-            v-bind:y1="tile.y"
-            v-bind:x2="tile.x - 5"
-            v-bind:y2="tile.y"
-          />
+
+      <div v-if="gameId">
+        <div>
+          <p>{{ message }}</p>
+          <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
+          <span>Turn {{ turnCounter }}</span>
+        </div>
+        <svg viewBox="-10 -10 100 100" height="400" width="400">
           <circle
-            v-bind:cx="tile.x"
-            v-bind:cy="tile.y"
-            r="4"
-            fill-opacity="0"
-            v-on:click="tileClick(tile)"
+            v-for="mark in marks"
+            v-bind:cx="mark.x"
+            v-bind:cy="mark.y"
+            r="1"
           />
-        </g>
-        <g v-for="stone in stones">
-          <go-stone
-            v-bind:stone="stone"
-            v-bind:turn-counter="turnCounter"
-            v-on:stone-click="stoneClick(stone)"
-          />
-        </g>
-      </svg>
+          <g v-for="tile in tiles">
+            <line
+              stroke-linecap="square"
+              v-bind:x1="tile.x"
+              v-bind:y1="tile.y"
+              v-bind:x2="tile.x"
+              v-bind:y2="tile.y"
+            />
+            <line
+              v-if="tile.north"
+              v-bind:x1="tile.x"
+              v-bind:y1="tile.y"
+              v-bind:x2="tile.x"
+              v-bind:y2="tile.y - 5"
+            />
+            <line
+              v-if="tile.east"
+              v-bind:x1="tile.x"
+              v-bind:y1="tile.y"
+              v-bind:x2="tile.x + 5"
+              v-bind:y2="tile.y"
+            />
+            <line
+              v-if="tile.south"
+              v-bind:x1="tile.x"
+              v-bind:y1="tile.y"
+              v-bind:x2="tile.x"
+              v-bind:y2="tile.y + 5"
+            />
+            <line
+              v-if="tile.west"
+              v-bind:x1="tile.x"
+              v-bind:y1="tile.y"
+              v-bind:x2="tile.x - 5"
+              v-bind:y2="tile.y"
+            />
+            <circle
+              v-bind:cx="tile.x"
+              v-bind:cy="tile.y"
+              r="4"
+              fill-opacity="0"
+              v-on:click="tileClick(tile)"
+            />
+          </g>
+          <g v-for="stone in stones">
+            <go-stone
+              v-bind:stone="stone"
+              v-bind:turn-counter="turnCounter"
+              v-on:stone-click="stoneClick(stone)"
+            />
+          </g>
+        </svg>
+      </div>
     </div>
   </body>
 
@@ -192,6 +204,8 @@
         username: "",
         password: "",
         user: null,
+        games: [],
+        gameId: null,
         stones: [],
         marks: [
           { x: 20, y: 20 },
@@ -228,11 +242,28 @@
 
       created: function () {
         this.createTiles();
-        this.update();
+        if (this.game) {
+          this.update();
+        } else {
+          this.getGames();
+        }
         this.checkLogin();
       },
 
       methods: {
+        setGame: function (id) {
+          this.gameId = id;
+          this.update();
+        },
+
+        getGames: async function () {
+          this.games = await this.fetch("games/list");
+        },
+
+        newGame: async function () {
+          this.games.push(await this.fetch("games", { method: "POST" }));
+        },
+
         createTiles: function () {
           const rows = 9;
           const columns = 9;
@@ -256,7 +287,7 @@
         },
 
         getGameSate: async function () {
-          const gameState = await this.fetch("gameState");
+          const gameState = await this.fetch(`games/${this.gameId}/gameState`);
           this.turnCounter = gameState.turnCounter;
           this.turnEnd = new Date(gameState.turnEnd);
           this.millisecondsLeft = this.turnEnd - new Date();
@@ -265,11 +296,11 @@
         },
 
         getStones: async function () {
-          this.stones = await this.fetch("");
+          this.stones = await this.fetch(`games/${this.gameId}/getStones`);
         },
 
         tileClick: async function (tile) {
-          const stone = await this.fetch("", {
+          const stone = await this.fetch(`games/${this.gameId}/addStone`, {
             method: "POST",
             body: JSON.stringify({
               x: tile.x / 10,
@@ -286,7 +317,7 @@
             return;
           }
 
-          await this.fetch("removePendingStone", {
+          await this.fetch(`games/${this.gameId}/removePendingStone`, {
             method: "POST",
             body: JSON.stringify(stone),
           });

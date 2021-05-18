@@ -8,10 +8,8 @@ const path = require("path");
 
 const saltRounds = 10;
 
+const gameRouter = require("./routes/gameRouter");
 const User = require("./models/user");
-const Stone = require("./models/stone");
-const GameState = require("./models/gameState");
-const GameLogic = require("./gameLogic");
 
 // Source: https://github.com/passport/express-4.x-local-example/blob/master/server.js
 passport.use(
@@ -71,49 +69,7 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-// TODO: What happens if this is called while turn change is in progress?
-app.get("/", (req, res) => {
-  const stones = GameLogic.getStones().filter(
-    (stone) =>
-      !(stone.isPending || stone.removedBy === "CONFLICT") ||
-      (req.user && req.user.equals(stone.user))
-  );
-  res.json(stones);
-});
-
-// TODO: What happens if this is called while turn change is in progress?
-app.get("/gameState", async (req, res) => {
-  const state = await GameState.findOne();
-  res.json(state);
-});
-
-app.post("/", async (req, res, next) => {
-  try {
-    const stone = new Stone(req.body);
-    if (!req.user || !stone.user || !req.user.equals(stone.user)) {
-      throw new Error("Stone owner doesn't match user.");
-    }
-    stone.user = req.user;
-    await GameLogic.addStone(stone);
-    res.status(200).json(stone);
-  } catch (err) {
-    return next(err);
-  }
-});
-
-app.post("/removePendingStone", async (req, res, next) => {
-  try {
-    const stone = new Stone(req.body);
-    if (!req.user || !stone.user || !req.user.equals(stone.user)) {
-      throw new Error("Stone owner doesn't match user.");
-    }
-    stone.user = req.user;
-    await GameLogic.removePendingStone(stone);
-    res.status(200).json(stone);
-  } catch (err) {
-    return next(err);
-  }
-});
+app.use("/games", gameRouter);
 
 app.post("/login", function (req, res, next) {
   passport.authenticate("local", function (err, user, info) {
@@ -213,9 +169,6 @@ const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 db.once("open", async () => {
   console.log("MongoDB connection opened");
-
-  // TODO: Check for race conditions and other dangerous things
-  await GameLogic.initialize();
 });
 
 app.listen(port, () => {
