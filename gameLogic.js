@@ -1,7 +1,9 @@
 const Game = require("./models/game");
 
 // TODO: Different board sizes and types (e.g. toroidal or with holes)
+// TODO: Different time settings
 const BOARD_SIZE = 9;
+const TURN_TIME = 60000;
 
 const instances = new Map();
 
@@ -31,7 +33,7 @@ exports.get = async function (id) {
 exports.newGame = async function () {
   const game = new Game({
     turnCounter: 1,
-    turnEnd: new Date(Date.now() + 60000),
+    turnEnd: new Date(Date.now() + TURN_TIME),
     stones: [],
   });
   await game.save();
@@ -195,7 +197,7 @@ class GameLogic {
       stone.removedBy = "DEATH";
     });
 
-    this.game.turnEnd = new Date(Date.now() + 60000);
+    this.game.turnEnd = new Date(Date.now() + TURN_TIME);
     this.game.turnCounter++;
 
     await this.game.save();
@@ -206,7 +208,7 @@ class GameLogic {
     const that = this;
     setTimeout(() => {
       that.confirmStones.bind(that)();
-    }, 60000);
+    }, TURN_TIME);
   }
 
   initializeBoard() {
