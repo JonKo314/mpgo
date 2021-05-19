@@ -44,8 +44,6 @@ class GameLogic {
 
     this.game = null;
     this.board = [];
-    this.aliveMap = [];
-    this.visitedMap = [];
   }
 
   async initialize() {
@@ -155,32 +153,46 @@ class GameLogic {
       currentStones.push(stone);
     });
 
-    this.checkAllLiberties();
-
     let survivingStones = [];
-    currentStones.forEach((stone) => {
+    let deadStones = [];
+    this.getGroups().forEach((group) => {
       if (
-        stone.placedOnTurn < this.game.turnCounter &&
-        !this.aliveMap[stone.y][stone.x]
+        group.every((stone) => stone.placedOnTurn < this.game.turnCounter) &&
+        group.every((stone) =>
+          this.getAdjacentPositions(stone).every(
+            (position) => this.board[position.y][position.x].stone
+          )
+        )
       ) {
-        this.board[stone.y][stone.x].stone = null;
-        stone.removedOnTurn = this.game.turnCounter;
-        stone.removedBy = "DEATH";
+        deadStones.push(...group);
       } else {
-        survivingStones.push(stone);
+        survivingStones.push(...group);
       }
+    });
+
+    deadStones.forEach((stone) => {
+      this.board[stone.y][stone.x].stone = null;
+      stone.removedOnTurn = this.game.turnCounter;
+      stone.removedBy = "DEATH";
     });
     currentStones = survivingStones;
 
-    this.checkAllLiberties();
-
-    survivingStones = [];
-    currentStones.forEach((stone) => {
-      if (!this.aliveMap[stone.y][stone.x]) {
-        this.board[stone.y][stone.x].stone = null;
-        stone.removedOnTurn = this.game.turnCounter;
-        stone.removedBy = "DEATH";
+    deadStones.length = 0;
+    this.getGroups().forEach((group) => {
+      if (
+        group.every((stone) =>
+          this.getAdjacentPositions(stone).every(
+            (position) => this.board[position.y][position.x].stone
+          )
+        )
+      ) {
+        deadStones.push(...group);
       }
+    });
+
+    deadStones.forEach((stone) => {
+      stone.removedOnTurn = this.game.turnCounter;
+      stone.removedBy = "DEATH";
     });
 
     this.game.turnEnd = new Date(Date.now() + 60000);
@@ -215,42 +227,58 @@ class GameLogic {
     });
   }
 
-  checkAllLiberties() {
-    this.aliveMap.length = 0;
-    this.aliveMap.length = BOARD_SIZE;
-    this.visitedMap.length = 0;
-    this.visitedMap.length = BOARD_SIZE;
+  getGroups() {
+    const groupBoard = [];
+    groupBoard.length = BOARD_SIZE;
 
     for (let y = 0; y < BOARD_SIZE; ++y) {
-      this.aliveMap[y] = [];
-      this.aliveMap[y].length = BOARD_SIZE;
-      this.visitedMap[y] = [];
-      this.visitedMap[y].length = BOARD_SIZE;
+      groupBoard[y] = [];
+      groupBoard[y].length = BOARD_SIZE;
     }
 
-    this.game.currentStones.forEach((stone) => {
-      this.hasLiberty(stone);
-    });
-  }
+    const groups = new Map();
+    let groupCounter = 0;
+    for (let y = 0; y < BOARD_SIZE; ++y) {
+      for (let x = 0; x < BOARD_SIZE; ++x) {
+        const stone = this.board[y][x].stone;
+        if (!stone) {
+          continue;
+        }
 
-  hasLiberty(stone) {
-    if (this.visitedMap[stone.y][stone.x]) {
-      return this.aliveMap[stone.y][stone.x];
-    }
+        const adjacentGroups = [];
+        this.getAdjacentPositions({ x, y }).forEach((position) => {
+          const adjacentStone = this.board[position.y][position.x].stone;
+          if (adjacentStone && adjacentStone.user.equals(stone.user)) {
+            const adjacentGroup = groupBoard[position.y][position.x];
+            if (adjacentGroup != null) {
+              // not null or not undefined
+              adjacentGroups.push(adjacentGroup);
+            }
+          }
+        });
 
-    this.visitedMap[stone.y][stone.x] = true;
-    this.aliveMap[stone.y][stone.x] = this.getAdjacentPositions(stone).some(
-      (position) => {
-        const adjacentStone = this.board[position.y][position.x].stone;
-        return (
-          !adjacentStone ||
-          (adjacentStone.user.equals(stone.user) &&
-            this.hasLiberty(adjacentStone))
-        );
+        if (adjacentGroups.length === 0) {
+          const group = groupCounter++;
+          groupBoard[y][x] = group;
+          groups.set(group, [stone]);
+        } else {
+          const group = adjacentGroups.pop();
+          groupBoard[y][x] = group;
+          groups.get(group).push(stone);
+
+          adjacentGroups.forEach((adjacentGroup) => {
+            const stones = groups.get(adjacentGroup);
+            groups.get(group).push(...stones);
+            stones.forEach((adjacentStone) => {
+              groupBoard[adjacentStone.y][adjacentStone.x] = group;
+            });
+            groups.delete(adjacentGroup);
+          });
+        }
       }
-    );
+    }
 
-    return this.aliveMap[stone.y][stone.x];
+    return groups;
   }
 
   isValidPosition(x, y) {
