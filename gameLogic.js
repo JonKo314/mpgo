@@ -252,7 +252,10 @@ class GameLogic {
           const adjacentStone = this.board[position.y][position.x].stone;
           if (adjacentStone && adjacentStone.user.equals(stone.user)) {
             const adjacentGroup = groupBoard[position.y][position.x];
-            if (adjacentGroup != null) {
+            if (
+              adjacentGroup != null &&
+              adjacentGroups.every((group) => group !== adjacentGroup)
+            ) {
               // not null or not undefined
               adjacentGroups.push(adjacentGroup);
             }
