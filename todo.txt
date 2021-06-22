@@ -1,5 +1,4 @@
 - update changed user colors in gameLogic.js
-- more games
 - counting
 - conflict resolvement
 - variants

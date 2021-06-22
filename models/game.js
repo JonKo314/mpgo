@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const StoneSchema = require("./stone").schema;
 
 const gameSchema = new mongoose.Schema({
+  boardSize: { type: Number },
+  turnTime: { type: Number },
   turnCounter: { type: Number },
   turnEnd: { type: Date },
   stones: [StoneSchema],

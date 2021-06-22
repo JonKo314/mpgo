@@ -89,6 +89,14 @@
             {{ game._id }}
           </li>
         </ul>
+        <label>
+          <span>Board size: </span>
+          <input type="number" v-model="newGame.boardSize" />
+        </label>
+        <label>
+          <span>Turn time: </span>
+          <input type="number" v-model="newGame.turnTime" />
+        </label>
         <button type="button" v-on:click="newGame()">New game</button>
       </div>
 
@@ -98,14 +106,14 @@
           <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
           <span>Turn {{ turnCounter }}</span>
         </div>
-        <svg viewBox="-10 -10 100 100" height="400" width="400">
+        <svg v-bind:view-box.camel="board.viewBox" height="600" width="600">
           <circle
-            v-for="mark in marks"
+            v-for="mark in board.marks"
             v-bind:cx="mark.x"
             v-bind:cy="mark.y"
             r="1"
           />
-          <g v-for="tile in tiles">
+          <g v-for="tile in board.tiles">
             <line
               stroke-linecap="square"
               v-bind:x1="tile.x"
@@ -207,14 +215,7 @@
         games: [],
         gameId: null,
         stones: [],
-        marks: [
-          { x: 20, y: 20 },
-          { x: 60, y: 20 },
-          { x: 40, y: 40 },
-          { x: 20, y: 60 },
-          { x: 60, y: 60 },
-        ],
-        tiles: [],
+        boardSize: null,
         turnCounter: 0,
         turnEnd: null,
         millisecondsLeft: Infinity,
@@ -238,10 +239,64 @@
             ? prettyTime(hours, minutes)
             : prettyTime(minutes, seconds);
         },
+
+        board: function () {
+          const board = {};
+          const svgFactor = 10;
+
+          const tiles = [];
+          const rows = this.boardSize;
+          const columns = this.boardSize;
+          for (let row = 0; row < rows; ++row) {
+            for (let column = 0; column < columns; ++column) {
+              tiles.push({
+                x: column * svgFactor,
+                y: row * svgFactor,
+                north: row > 0,
+                east: column < columns - 1,
+                south: row < rows - 1,
+                west: column > 0,
+              });
+            }
+          }
+
+          const marks = [];
+          const left = { x: svgFactor * (this.boardSize < 13 ? 2 : 3) };
+          const right = { x: svgFactor * (this.boardSize - 1) - left.x };
+          const top = { y: left.x };
+          const bottom = { y: right.x };
+
+          marks.push({ ...left, ...top });
+          marks.push({ ...right, ...top });
+          marks.push({ ...left, ...bottom });
+          marks.push({ ...right, ...bottom });
+
+          if (this.boardSize % 2 > 0) {
+            const mid = svgFactor * 0.5 * (this.boardSize - 1);
+            const midRow = { y: mid };
+            const midColumn = { x: mid };
+            marks.push({ ...midRow, ...midColumn });
+
+            if (this.boardSize >= 15) {
+              marks.push({ ...left, ...midRow });
+              marks.push({ ...right, ...midRow });
+              marks.push({ ...midColumn, ...top });
+              marks.push({ ...midColumn, ...bottom });
+            }
+          }
+
+          const viewBoxStart = -svgFactor;
+          const viewBoxSize = svgFactor * (this.boardSize + 1);
+
+          board.tiles = tiles;
+          board.marks = marks;
+          board.viewBox = `${viewBoxStart} ${viewBoxStart} ${viewBoxSize} ${viewBoxSize}`;
+
+          return board;
+        },
       },
 
       created: function () {
-        this.createTiles();
         if (this.game) {
           this.update();
         } else {
@@ -261,24 +316,15 @@
         },
 
         newGame: async function () {
-          this.games.push(await this.fetch("games", { method: "POST" }));
-        },
-
-        createTiles: function () {
-          const rows = 9;
-          const columns = 9;
-          for (let row = 0; row < rows; ++row) {
-            for (let column = 0; column < columns; ++column) {
-              this.tiles.push({
-                x: column * 10,
-                y: row * 10,
-                north: row > 0,
-                east: column < columns - 1,
-                south: row < rows - 1,
-                west: column > 0,
-              });
-            }
-          }
+          this.games.push(
+            await this.fetch("games", {
+              method: "POST",
+              body: JSON.stringify({
+                boardSize: this.newGame.boardSize,
+                turnTime: this.newGame.turnTime * 1000,
+              }),
+            })
+          );
         },
 
         update: function () {
@@ -288,10 +334,13 @@
 
         getGameSate: async function () {
           const gameState = await this.fetch(`games/${this.gameId}/gameState`);
+          this.boardSize = gameState.boardSize;
           this.turnCounter = gameState.turnCounter;
           this.turnEnd = new Date(gameState.turnEnd);
+
           this.millisecondsLeft = this.turnEnd - new Date();
           setTimeout(this.update, this.millisecondsLeft);
+
           this.updateTurnClock();
         },
 
@@ -309,6 +358,7 @@
               isPending: true,
             }),
           });
+          console.log(`push stone: ${stone}`);
           this.stones.push(stone);
         },
 

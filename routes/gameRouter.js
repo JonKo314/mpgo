@@ -8,7 +8,7 @@ const GameLogic = require("../gameLogic");
 // TODO: What happens if things are called while turn change is in progress?
 
 router.post("/", async (req, res) => {
-  const game = await GameLogic.newGame();
+  const game = await GameLogic.newGame(req.body);
   res.json(game);
 });
 

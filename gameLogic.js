@@ -1,10 +1,5 @@
 const Game = require("./models/game");
 
-// TODO: Different board sizes and types (e.g. toroidal or with holes)
-// TODO: Different time settings
-const BOARD_SIZE = 9;
-const TURN_TIME = 60000;
-
 const instances = new Map();
 
 exports.get = async function (id) {
@@ -30,11 +25,19 @@ exports.get = async function (id) {
   return gameLogic;
 };
 
-exports.newGame = async function () {
+exports.newGame = async function (options) {
+  const turnTime = options.turnTime || 60000;
   const game = new Game({
-    turnCounter: 1,
-    turnEnd: new Date(Date.now() + TURN_TIME),
-    stones: [],
+    ...{
+      boardSize: 9, // TODO: Different board types (e.g. rectangular, toroidal or with holes)
+    },
+    ...options,
+    ...{
+      turnTime: turnTime,
+      turnCounter: 1,
+      turnEnd: new Date(Date.now() + turnTime),
+      stones: [],
+    },
   });
   await game.save();
   return game;
@@ -197,7 +200,7 @@ class GameLogic {
       stone.removedBy = "DEATH";
     });
 
-    this.game.turnEnd = new Date(Date.now() + TURN_TIME);
+    this.game.turnEnd = new Date(Date.now() + this.game.turnTime);
     this.game.turnCounter++;
 
     await this.game.save();
@@ -208,14 +211,14 @@ class GameLogic {
     const that = this;
     setTimeout(() => {
       that.confirmStones.bind(that)();
-    }, TURN_TIME);
+    }, this.game.turnTime);
   }
 
   initializeBoard() {
     this.board.length = 0;
-    for (let y = 0; y < BOARD_SIZE; ++y) {
+    for (let y = 0; y < this.game.boardSize; ++y) {
       this.board[y] = [];
-      for (let x = 0; x < BOARD_SIZE; ++x) {
+      for (let x = 0; x < this.game.boardSize; ++x) {
         this.board[y][x] = { x: x, y: y, stone: null, pendingStones: [] };
       }
     }
@@ -231,17 +234,17 @@ class GameLogic {
 
   getGroups() {
     const groupBoard = [];
-    groupBoard.length = BOARD_SIZE;
+    groupBoard.length = this.game.boardSize;
 
-    for (let y = 0; y < BOARD_SIZE; ++y) {
+    for (let y = 0; y < this.game.boardSize; ++y) {
       groupBoard[y] = [];
-      groupBoard[y].length = BOARD_SIZE;
+      groupBoard[y].length = this.game.boardSize;
     }
 
     const groups = new Map();
     let groupCounter = 0;
-    for (let y = 0; y < BOARD_SIZE; ++y) {
-      for (let x = 0; x < BOARD_SIZE; ++x) {
+    for (let y = 0; y < this.game.boardSize; ++y) {
+      for (let x = 0; x < this.game.boardSize; ++x) {
         const stone = this.board[y][x].stone;
         if (!stone) {
           continue;
@@ -287,7 +290,9 @@ class GameLogic {
   }
 
   isValidPosition(x, y) {
-    return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
+    return (
+      x >= 0 && x < this.game.boardSize && y >= 0 && y < this.game.boardSize
+    );
   }
 
   getAdjacentPositions(stone) {
