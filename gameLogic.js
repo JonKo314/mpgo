@@ -2,6 +2,8 @@ const Game = require("./models/game");
 
 const instances = new Map();
 
+const MAX_DATE = new Date(8640000000000000);
+
 exports.get = async function (id) {
   let gameLogic = instances.get(id);
   if (gameLogic) {
@@ -49,6 +51,7 @@ class GameLogic {
 
     this.game = null;
     this.board = [];
+    this.turnChangeTimeout = null;
   }
 
   async initialize() {
@@ -68,10 +71,7 @@ class GameLogic {
     if (game.turnEnd < Date.now()) {
       this.confirmStones();
     } else {
-      const that = this;
-      setTimeout(() => {
-        that.confirmStones.bind(that)();
-      }, game.turnEnd - Date.now());
+      this.setTurnChangeTimeout();
     }
   }
 
@@ -124,6 +124,41 @@ class GameLogic {
 
   getStones() {
     return this.game.stones;
+  }
+
+  async haltTurn() {
+    this.clearTurnChangeTimeout();
+    this.game.turnEnd = MAX_DATE;
+
+    await this.game.save();
+    console.log(
+      `Game ${this.game.id} saved. Turn halted: ${this.game.turnCounter} End: ${this.game.turnEnd}`
+    );
+  }
+
+  async forceTurnChange() {
+    this.clearTurnChangeTimeout();
+    this.game.turnEnd = Date.now();
+    await this.game.save();
+    console.log(
+      `Game ${this.game.id} saved. Turn forced to end: ${this.game.turnCounter} End: ${this.game.turnEnd}`
+    );
+
+    this.setTurnChangeTimeout(1000);
+  }
+
+  setTurnChangeTimeout() {
+    const that = this;
+    this.turnChangeTimeout = setTimeout(() => {
+      that.confirmStones.bind(that)();
+    }, this.game.turnEnd - Date.now());
+  }
+
+  clearTurnChangeTimeout() {
+    if (this.turnChangeTimeout) {
+      clearTimeout(this.turnChangeTimeout);
+    }
+    this.turnChangeTimeout = null;
   }
 
   // TODO: Function naming
@@ -205,13 +240,10 @@ class GameLogic {
 
     await this.game.save();
     console.log(
-      `State saved. Turn: ${this.game.turnCounter} End: ${this.game.turnEnd}`
+      `Game ${this.game.id} saved. Turn: ${this.game.turnCounter} End: ${this.game.turnEnd}`
     );
 
-    const that = this;
-    setTimeout(() => {
-      that.confirmStones.bind(that)();
-    }, this.game.turnTime);
+    this.setTurnChangeTimeout();
   }
 
   initializeBoard() {

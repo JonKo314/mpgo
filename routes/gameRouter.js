@@ -65,4 +65,16 @@ router.post("/:gameId/removePendingStone", async (req, res, next) => {
   }
 });
 
+router.post("/:gameId/haltTurn", async (req, res, next) => {
+  const gameLogic = await GameLogic.get(req.params.gameId);
+  await gameLogic.haltTurn();
+  res.sendStatus(200);
+});
+
+router.post("/:gameId/endTurn", async (req, res, next) => {
+  const gameLogic = await GameLogic.get(req.params.gameId);
+  await gameLogic.forceTurnChange();
+  res.sendStatus(200);
+});
+
 module.exports = router;

@@ -105,6 +105,12 @@
           <p>{{ message }}</p>
           <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
           <span>Turn {{ turnCounter }}</span>
+          <button v-if="user" type="button" v-on:click="haltTurn()">
+            Halt turn
+          </button>
+          <button v-if="user" type="button" v-on:click="endTurn()">
+            End turn
+          </button>
         </div>
         <svg v-bind:view-box.camel="board.viewBox" height="600" width="600">
           <circle
@@ -227,6 +233,10 @@
           const twoDigits = (a) => a.toString().padStart(2, "0");
           const prettyTime = (a, b) => twoDigits(a) + ":" + twoDigits(b);
 
+          if (this.millisecondsLeft === Infinity) {
+            return "paused";
+          }
+
           if (this.millisecondsLeft < 0) {
             return prettyTime(0, 0);
           }
@@ -327,6 +337,16 @@
           );
         },
 
+        haltTurn: async function () {
+          await this.fetch(`games/${this.gameId}/haltTurn`, { method: "POST" });
+          this.getGameSate();
+        },
+
+        endTurn: async function () {
+          await this.fetch(`games/${this.gameId}/endTurn`, { method: "POST" });
+          this.update();
+        },
+
         update: function () {
           this.getGameSate();
           this.getStones();
@@ -338,10 +358,10 @@
           this.turnCounter = gameState.turnCounter;
           this.turnEnd = new Date(gameState.turnEnd);
 
-          this.millisecondsLeft = this.turnEnd - new Date();
-          setTimeout(this.update, this.millisecondsLeft);
-
           this.updateTurnClock();
+          if (this.millisecondsLeft !== Infinity) {
+            setTimeout(this.update, this.millisecondsLeft);
+          }
         },
 
         getStones: async function () {
@@ -375,8 +395,13 @@
         },
 
         updateTurnClock: function () {
-          this.millisecondsLeft = this.turnEnd - new Date();
-          if (this.millisecondsLeft <= 0) {
+          const MAX_DATE = new Date(8640000000000000);
+          this.millisecondsLeft =
+            this.turnEnd < MAX_DATE ? this.turnEnd - new Date() : Infinity;
+          if (
+            this.millisecondsLeft <= 0 ||
+            this.millisecondsLeft === Infinity
+          ) {
             return;
           }
 
