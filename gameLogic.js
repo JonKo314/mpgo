@@ -70,7 +70,7 @@ class GameLogic {
 
     if (game.turnEnd < Date.now()) {
       this.confirmStones();
-    } else {
+    } else if (game.turnEnd.getTime() !== MAX_DATE.getTime()) {
       this.setTurnChangeTimeout();
     }
   }
