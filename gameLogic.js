@@ -178,8 +178,11 @@ class GameLogic {
       }
     });
 
-    // TODO: Elaborate conflict resolving
-    conflictedStones.forEach((stone) => {
+    const [conflictWinners, conflictLosers] =
+      this.resolveConflicts(conflictedStones);
+    confirmedStones.push(...conflictWinners);
+
+    conflictLosers.forEach((stone) => {
       this.board[stone.y][stone.x].pendingStones.length = 0;
       stone.isPending = false;
       stone.removedOnTurn = this.game.turnCounter;
@@ -244,6 +247,75 @@ class GameLogic {
     );
 
     this.setTurnChangeTimeout();
+  }
+
+  resolveConflicts(conflictedStones) {
+    const heatMaps = this.getHeatMaps();
+    const successfulStones = [];
+    const failedStones = [];
+
+    conflictedStones.forEach((position) => {
+      const pendingStones = this.board[position.y][position.x].pendingStones;
+      if (!pendingStones.length) {
+        return;
+      }
+
+      const [minHeat, minHeatStones, higherHeatStones] = pendingStones.reduce(
+        ([minHeat, minHeatStones, higherHeatStones], stone) => {
+          const heat = heatMaps.get(stone.user.name)[stone.y][stone.x];
+          if (heat < minHeat) {
+            return [heat, [stone], [...higherHeatStones, ...minHeatStones]];
+          }
+          if (heat == minHeat) {
+            return [heat, [...minHeatStones, stone], higherHeatStones];
+          }
+          return [minHeat, minHeatStones, [...higherHeatStones, stone]];
+        },
+        [Infinity, [], []]
+      );
+
+      failedStones.push(...higherHeatStones);
+      (minHeatStones.length === 1 ? successfulStones : failedStones).push(
+        ...minHeatStones
+      );
+    });
+
+    return [successfulStones, failedStones];
+  }
+
+  // TODO: Deduplicate code, see index.html
+  getHeatMaps() {
+    const getDistance = (a, b) => {
+      const dx2 = Math.pow(Math.abs(a.x - b.x), 2);
+      const dy2 = Math.pow(Math.abs(a.y - b.y), 2);
+      return Math.sqrt(dx2 + dy2);
+    };
+
+    // TODO: Add and use this.game.players
+    const userNames = new Set(this.game.stones.map((stone) => stone.user.name));
+    const heatMaps = new Map(
+      [...userNames].map((userName) => [
+        userName,
+        Array(this.game.boardSize)
+          .fill()
+          .map(() => Array(this.game.boardSize).fill(0)),
+      ])
+    );
+
+    this.game.stones
+      .filter((stone) => !stone.isPending && stone.removedBy !== "CONFLICT")
+      .forEach((stone) => {
+        for (let y = 0; y < this.game.boardSize; ++y) {
+          for (let x = 0; x < this.game.boardSize; ++x) {
+            const distance = Math.max(1.0, getDistance({ x, y }, stone));
+            heatMaps.get(stone.user.name)[y][x] +=
+              Math.pow(0.5, this.game.turnCounter - stone.placedOnTurn - 1) /
+              distance;
+          }
+        }
+      });
+
+    return heatMaps;
   }
 
   initializeBoard() {

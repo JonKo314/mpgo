@@ -1,10 +1,14 @@
 mpgo/mmgo
-parallel massive multiplayer corresponcence go
+parallel massive multiplayer correspondence go
 
 Players may decide during each turn, where their next move should be played.
 At the end of each turn the gamemaster/server places the stones for all players, conflicts need to be resolved.
 
-Variant A: Players may not play close to their previous moves as long as other players are able to play close to them and do so.
+Variant A: Players may not play close to their previous moves
+    i:      as long as other players are able to play close to them and do so.
+    ii:     Player based "heat" is added around the stone the player played. The heat gradually cools off.
+            Above a certain heat threshold the player mustn't play in the area, below the threshold heat is used for conflict resolvement.
+            A second threshold could be used to prohibit moves, if the heat is below the threshold.
 Variant B: Players may not play far away from their stones.
 Variant C: During conflict resolving players gain privileged treatment, when they were treated badly before.
 Variant D: Players may play more stones, when they have more territory/prisoners (each prisoner might only be usable once).

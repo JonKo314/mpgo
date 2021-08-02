@@ -27,6 +27,11 @@
         fill: none;
         stroke-width: 0.5;
       }
+
+      circle.heatIndicator {
+        stroke-width: 0.5;
+        fill: none;
+      }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
@@ -156,6 +161,21 @@
               v-bind:y2="tile.y"
             />
             <circle
+              class="heatIndicator"
+              v-for="user in users"
+              v-bind:cx="tile.x"
+              v-bind:cy="tile.y"
+              v-bind:stroke="user.color"
+              v-bind:stroke-opacity="heatMaps.get(user.name)[tile.y / 10][tile.x / 10] * 0.9"
+              r="2.8"
+            />
+            <path
+              v-for="[user, path] in subjectivePrivilegePathMap[tile.y / 10][tile.x / 10]"
+              v-bind:d="path"
+              v-bind:fill="user.color"
+              fill-opacity="0.8"
+            />
+            <circle
               v-bind:cx="tile.x"
               v-bind:cy="tile.y"
               r="4"
@@ -229,6 +249,17 @@
       },
 
       computed: {
+        // TODO: Get users directly from game object
+        users: function () {
+          const usernames = new Set(
+            this.stones.map((stone) => stone.user.name)
+          );
+
+          return [...usernames].map(
+            (name) => this.stones.find((stone) => stone.user.name === name).user
+          );
+        },
+
         timeLeft: function () {
           const twoDigits = (a) => a.toString().padStart(2, "0");
           const prettyTime = (a, b) => twoDigits(a) + ":" + twoDigits(b);
@@ -303,6 +334,143 @@
           board.viewBox = `${viewBoxStart} ${viewBoxStart} ${viewBoxSize} ${viewBoxSize}`;
 
           return board;
+        },
+
+        // TODO: Deduplicate code, see gameLogic.js
+        heatMaps: function () {
+          const getDistance = (a, b) => {
+            const dx2 = Math.pow(Math.abs(a.x - b.x), 2);
+            const dy2 = Math.pow(Math.abs(a.y - b.y), 2);
+            return Math.sqrt(dx2 + dy2);
+          };
+
+          const heatMaps = new Map(
+            this.users.map((user) => [
+              user.name,
+              Array(this.boardSize)
+                .fill()
+                .map(() => Array(this.boardSize).fill(0)),
+            ])
+          );
+
+          this.stones
+            .filter(
+              (stone) => !stone.isPending && stone.removedBy !== "CONFLICT"
+            )
+            .forEach((stone) => {
+              for (let y = 0; y < this.boardSize; ++y) {
+                for (let x = 0; x < this.boardSize; ++x) {
+                  const distance = Math.max(1.0, getDistance({ x, y }, stone));
+                  heatMaps.get(stone.user.name)[y][x] +=
+                    Math.pow(0.5, this.turnCounter - stone.placedOnTurn - 1) /
+                    distance;
+                }
+              }
+            });
+
+          return heatMaps;
+        },
+
+        objectivePrivilegeMap: function () {
+          if (!this.users.length) {
+            return Array(this.boardSize)
+              .fill()
+              .map(() => Array(this.boardSize).fill([]));
+          }
+
+          const privilegeMap = [];
+          for (let y = 0; y < this.boardSize; ++y) {
+            privilegeMap[y] = [];
+            for (let x = 0; x < this.boardSize; ++x) {
+              const [privilegedUsers] = this.users
+                .map((user) => [[user], this.heatMaps.get(user.name)[y][x]])
+                .reduce(([minUsers, minHeat], [[user], heat]) =>
+                  heat < minHeat
+                    ? [[user], heat]
+                    : heat === minHeat
+                    ? [[...minUsers, user], heat]
+                    : [minUsers, minHeat]
+                );
+              privilegeMap[y][x] = privilegedUsers;
+            }
+          }
+          return privilegeMap;
+        },
+
+        subjectivePrivilegeMap: function () {
+          if (!this.user || !this.users.length) {
+            return Array(this.boardSize)
+              .fill()
+              .map(() => Array(this.boardSize).fill([]));
+          }
+
+          const privilegeMap = [];
+          for (let y = 0; y < this.boardSize; ++y) {
+            privilegeMap[y] = [];
+            for (let x = 0; x < this.boardSize; ++x) {
+              const userHeat = this.heatMaps.get(this.user.name)[y][x];
+              const privilegedUsers = this.users
+                .filter(
+                  (user) =>
+                    user.name !== this.user.name &&
+                    this.heatMaps.get(user.name)[y][x] <= userHeat
+                )
+                .sort(
+                  (firstUser, secondUser) =>
+                    this.heatMaps.get(secondUser.name)[y][x] -
+                    this.heatMaps.get(firstUser.name)[y][x]
+                );
+              privilegeMap[y][x] = privilegedUsers;
+            }
+          }
+          return privilegeMap;
+        },
+
+        subjectivePrivilegePathMap: function () {
+          const pathMap = [];
+          for (let y = 0; y < this.boardSize; ++y) {
+            pathMap[y] = [];
+            for (let x = 0; x < this.boardSize; ++x) {
+              pathMap[y][x] = [];
+              const users = this.subjectivePrivilegeMap[y][x];
+
+              const r = 2;
+              if (users.length === 1) {
+                const path = `
+                  M ${x * 10 + r} ${y * 10}
+                  A ${r} ${r} 0 0 0 ${x * 10 - r} ${y * 10}
+                  A ${r} ${r} 0 0 0 ${x * 10 + r} ${y * 10}`;
+                pathMap[y][x].push([users[0], path]);
+                continue;
+              }
+
+              for (
+                let userCounter = 0;
+                userCounter < users.length;
+                ++userCounter
+              ) {
+                const startAngle =
+                  Math.PI * (0.5 - (2.0 * userCounter) / users.length);
+                const endAngle =
+                  Math.PI * (0.5 - (2.0 * (userCounter + 1)) / users.length);
+                const startX = x * 10 + r * Math.cos(startAngle);
+                const startY = y * 10 - r * Math.sin(startAngle);
+                const endX = x * 10 + r * Math.cos(endAngle);
+                const endY = y * 10 - r * Math.sin(endAngle);
+                const largeArcFlag =
+                  Math.abs(startAngle - endAngle) > Math.PI ? 1 : 0;
+                const path = `
+                  M ${startX} ${startY}
+                  A ${r} ${r} 0 ${largeArcFlag} 1 ${endX} ${endY}
+                  L ${x * 10} ${y * 10}
+                  Z`;
+                pathMap[y][x].push([users[userCounter], path]);
+              }
+            }
+          }
+
+          console.log(pathMap);
+          return pathMap;
         },
       },
 

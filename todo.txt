@@ -1,6 +1,21 @@
-- update changed user colors in gameLogic.js
+- push to github
+    - CHECK PERSONAL INFORMATIONS IN COMMITS/HISTORY!!!
+
+- host prototype online
+    - add important stuff here
+    - limit registration
+    - admin/moderator users which may
+        - create games (for now)
+        - delete games
+        - invite users
+    - game names
+    - game.players
+        - limit game to certain players
+        - holds user colors per game
+    - rudimentary report system to get my attention (via github?)
+    - legal considerations
+    ? HTTPS
+
 - counting
-- conflict resolvement
 - variants
 - board shapes and sizes
-- HTTPS
