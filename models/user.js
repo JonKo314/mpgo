@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true, maxlength: 20 },
-  passwordHash: { select: false, type: String, maxlength: 60 }, // not required, because often not selected
+  passwordHash: { select: false, type: String, maxlength: 60, required: true },
   color: { type: String, required: true, match: /^#[0-9a-fA-F]{6}$/ },
   secondaryColor: { type: String, required: true, match: /^#[0-9a-fA-F]{6}$/ },
 });
