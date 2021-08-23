@@ -402,7 +402,7 @@
         },
 
         subjectivePrivilegeMap: function () {
-          if (!this.user || !this.users.length) {
+          if (!this.user || !this.heatMaps.has(this.user.name)) {
             return Array(this.boardSize)
               .fill()
               .map(() => Array(this.boardSize).fill([]));
