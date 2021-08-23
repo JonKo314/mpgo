@@ -3,6 +3,7 @@ const router = express.Router();
 
 const Game = require("../models/game");
 const Stone = require("../models/stone");
+const Player = require("../models/player");
 const GameLogic = require("../gameLogic");
 
 // TODO: What happens if things are called while turn change is in progress?
@@ -24,8 +25,17 @@ router.get("/:gameId/getStones", async (req, res) => {
     .filter(
       (stone) =>
         !(stone.isPending || stone.removedBy === "CONFLICT") ||
-        (req.user && req.user.equals(stone.user))
-    );
+        (req.user && req.user.equals(stone.player.user))
+    )
+    .map((stone) => {
+      // TODO: Refactor or deduplicate, see addStone()
+      const player = stone.player.toObject();
+      delete player.stones;
+      const apiStone = stone.toObject();
+      apiStone.player = player;
+      return apiStone;
+    });
+
   res.json(stones);
 });
 
@@ -38,13 +48,29 @@ router.get("/:gameId/gameState", async (req, res) => {
 router.post("/:gameId/addStone", async (req, res, next) => {
   const gameLogic = await GameLogic.get(req.params.gameId);
   try {
-    const stone = new Stone(req.body);
-    if (!req.user || !stone.user || !req.user.equals(stone.user)) {
-      throw new Error("Stone owner doesn't match user.");
+    let stone = new Stone(req.body);
+    if (!req.user) {
+      throw new Error("Login to place stones.");
     }
-    stone.user = req.user;
-    await gameLogic.addStone(stone);
-    res.status(200).json(stone);
+
+    let player = gameLogic.getPlayer(req.user);
+    if (!player) {
+      player = new Player({
+        user: req.user,
+        color: req.user.color,
+        secondaryColor: req.user.secondaryColor,
+        stones: [],
+      });
+      player = await gameLogic.addPlayer(player);
+    }
+
+    stone = await gameLogic.addStone(player, stone);
+    // TODO: Refactor or deduplicate, see getStones()
+    const playerWithoutStones = stone.player.toObject();
+    delete playerWithoutStones.stones;
+    const apiStone = stone.toObject();
+    apiStone.player = playerWithoutStones;
+    res.status(200).json(apiStone);
   } catch (err) {
     return next(err);
   }
@@ -54,11 +80,16 @@ router.post("/:gameId/removePendingStone", async (req, res, next) => {
   const gameLogic = await GameLogic.get(req.params.gameId);
   try {
     const stone = new Stone(req.body);
-    if (!req.user || !stone.user || !req.user.equals(stone.user)) {
-      throw new Error("Stone owner doesn't match user.");
+    if (!req.user) {
+      throw new Error("Login to remove stones");
     }
-    stone.user = req.user;
-    await gameLogic.removePendingStone(stone);
+
+    let player = gameLogic.getPlayer(req.user);
+    if (!player) {
+      throw new Error("No player found for that user");
+    }
+
+    await gameLogic.removePendingStone(player, stone);
     res.status(200).json(stone);
   } catch (err) {
     return next(err);

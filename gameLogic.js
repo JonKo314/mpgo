@@ -56,7 +56,7 @@ class GameLogic {
 
   async initialize() {
     const game = await Game.findById(this.id).populate({
-      path: "stones",
+      path: "players",
       populate: { path: "user" },
     });
     if (!game) {
@@ -75,7 +75,19 @@ class GameLogic {
     }
   }
 
-  async addStone(stone) {
+  getPlayer(user) {
+    return this.game.players.find((player) => player.user.equals(user));
+  }
+
+  async addPlayer(player) {
+    this.game.players.push(player);
+    await this.game.save();
+    return this.game.players.find((storedPlayer) =>
+      storedPlayer.equals(player)
+    );
+  }
+
+  async addStone(player, stone) {
     if (
       this.game.currentStones.some(
         (currentStone) =>
@@ -90,26 +102,29 @@ class GameLogic {
     const allowedNewStonesCount = 1;
     if (
       this.game.pendingStones.filter((pendingStone) =>
-        pendingStone.user.equals(stone.user)
+        pendingStone.player.equals(player)
       ).length >= allowedNewStonesCount
     ) {
       throw new Error(
-        "Stone rejected. No more stones allowed for that user this turn."
+        "Stone rejected. No more stones allowed for that player this turn."
       );
     }
 
     stone.isPending = true;
     stone.placedOnTurn = this.game.turnCounter;
-    this.game.stones.push(stone);
+    player.stones.push(stone);
     await this.game.save();
+    return this.game.players
+      .find((p) => player.equals(p))
+      .stones.find((s) => stone.equals(s));
   }
 
-  async removePendingStone(stone) {
+  async removePendingStone(player, stone) {
     const savedStone = this.game.stones.find(
       (savedStone) =>
         stone.x === savedStone.x &&
         stone.y === savedStone.y &&
-        stone.user.equals(savedStone.user) &&
+        player.equals(savedStone.player) &&
         savedStone.isPending
     );
     if (savedStone) {
@@ -117,7 +132,7 @@ class GameLogic {
       await this.game.save();
     } else {
       throw new Error(
-        `No stone for user ${stone.user.name} at (${stone.x}, ${stone.y}) to remove.`
+        `No stone for player ${player} at (${stone.x}, ${stone.y}) to remove.`
       );
     }
   }
@@ -262,7 +277,7 @@ class GameLogic {
 
       const [minHeat, minHeatStones, higherHeatStones] = pendingStones.reduce(
         ([minHeat, minHeatStones, higherHeatStones], stone) => {
-          const heat = heatMaps.get(stone.user.name)[stone.y][stone.x];
+          const heat = heatMaps.get(stone.player.user.name)[stone.y][stone.x];
           if (heat < minHeat) {
             return [heat, [stone], [...higherHeatStones, ...minHeatStones]];
           }
@@ -291,8 +306,11 @@ class GameLogic {
       return Math.sqrt(dx2 + dy2);
     };
 
-    // TODO: Add and use this.game.players
-    const userNames = new Set(this.game.stones.map((stone) => stone.user.name));
+    // TODO: Use this.game.players
+    // TODO: user name is nice for debugging, but requires many subdocuments
+    const userNames = new Set(
+      this.game.stones.map((stone) => stone.player.user.name)
+    );
     const heatMaps = new Map(
       [...userNames].map((userName) => [
         userName,
@@ -308,7 +326,7 @@ class GameLogic {
         for (let y = 0; y < this.game.boardSize; ++y) {
           for (let x = 0; x < this.game.boardSize; ++x) {
             const distance = Math.max(1.0, getDistance({ x, y }, stone));
-            heatMaps.get(stone.user.name)[y][x] +=
+            heatMaps.get(stone.player.user.name)[y][x] +=
               Math.pow(0.5, this.game.turnCounter - stone.placedOnTurn - 1) /
               distance;
           }
@@ -357,7 +375,7 @@ class GameLogic {
         const adjacentGroups = [];
         this.getAdjacentPositions({ x, y }).forEach((position) => {
           const adjacentStone = this.board[position.y][position.x].stone;
-          if (adjacentStone && adjacentStone.user.equals(stone.user)) {
+          if (adjacentStone && adjacentStone.player.equals(stone.player)) {
             const adjacentGroup = groupBoard[position.y][position.x];
             if (
               adjacentGroup != null &&

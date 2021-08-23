@@ -1,12 +1,19 @@
 const mongoose = require("mongoose");
-const StoneSchema = require("./stone").schema;
+const PlayerSchema = require("./player").schema;
 
 const gameSchema = new mongoose.Schema({
   boardSize: { type: Number },
   turnTime: { type: Number },
   turnCounter: { type: Number },
   turnEnd: { type: Date },
-  stones: [StoneSchema],
+  players: [PlayerSchema],
+});
+
+gameSchema.virtual("stones").get(function () {
+  return [].concat.apply(
+    [],
+    this.players.map((player) => player.stones)
+  );
 });
 
 gameSchema.virtual("currentStones").get(function () {

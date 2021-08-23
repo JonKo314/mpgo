@@ -203,7 +203,9 @@
       },
       computed: {
         markerColor: ({ stone }) =>
-          stone.removedOnTurn ? stone.user.color : stone.user.secondaryColor,
+          stone.removedOnTurn
+            ? stone.player.user.color
+            : stone.player.user.secondaryColor,
         showStone: ({ stone }) => !stone.removedOnTurn,
         showMarker: ({ stone, turnCounter }) =>
           turnCounter - stone.placedOnTurn === 1,
@@ -215,7 +217,7 @@
             v-bind:class="['stone', {pending: stone.isPending}]"
             v-bind:cx="10 * stone.x"
             v-bind:cy="10 * stone.y"
-            v-bind:fill="stone.user.color"
+            v-bind:fill="stone.player.user.color"
             r="4.5"
             v-on:click="$emit('stone-click', stone)"
           />
@@ -252,11 +254,13 @@
         // TODO: Get users directly from game object
         users: function () {
           const usernames = new Set(
-            this.stones.map((stone) => stone.user.name)
+            this.stones.map((stone) => stone.player.user.name)
           );
 
           return [...usernames].map(
-            (name) => this.stones.find((stone) => stone.user.name === name).user
+            (name) =>
+              this.stones.find((stone) => stone.player.user.name === name)
+                .player.user
           );
         },
 
@@ -361,7 +365,7 @@
               for (let y = 0; y < this.boardSize; ++y) {
                 for (let x = 0; x < this.boardSize; ++x) {
                   const distance = Math.max(1.0, getDistance({ x, y }, stone));
-                  heatMaps.get(stone.user.name)[y][x] +=
+                  heatMaps.get(stone.player.user.name)[y][x] +=
                     Math.pow(0.5, this.turnCounter - stone.placedOnTurn - 1) /
                     distance;
                 }
@@ -542,7 +546,6 @@
             body: JSON.stringify({
               x: tile.x / 10,
               y: tile.y / 10,
-              user: this.user,
               isPending: true,
             }),
           });
