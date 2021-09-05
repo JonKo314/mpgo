@@ -8,7 +8,7 @@
             "name": "Launch via npm",
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/server",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run-script", "debug-vscode-win"],
             "outputCapture": "std",
