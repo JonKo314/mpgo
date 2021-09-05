@@ -5,13 +5,36 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch via npm",
+            "name": "Server NPM",
             "type": "node",
             "request": "launch",
             "cwd": "${workspaceFolder}/server",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run-script", "debug-vscode-win"],
             "outputCapture": "std",
+        },
+        {
+            "name": "Client NPM",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/client",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["run", "serve"],
+            "outputCapture": "std",
+        },
+        {
+          "type": "firefox",
+          "request": "launch",
+          "name": "vuejs: firefox",
+          "url": "http://localhost:8080",
+          "webRoot": "${workspaceFolder}/client/src",
+          "pathMappings": [{ "url": "webpack:///src/", "path": "${webRoot}/" }]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Client+Server NPM",
+            "configurations": ["Client NPM", "Server NPM"]
         }
     ]
 }
