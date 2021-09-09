@@ -155,10 +155,6 @@ app.post("/setColors", async (req, res, next) => {
   }
 });
 
-app.get("/index", (req, res, next) => {
-  res.sendFile(path.join(`${__dirname}/views/index.html`));
-});
-
 mongoose.connect("mongodb://localhost/mpgo", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
