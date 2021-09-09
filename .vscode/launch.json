@@ -5,19 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Server NPM",
+            "name": "Backend NPM",
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceFolder}/server",
+            "cwd": "${workspaceFolder}/backend",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run-script", "debug-vscode-win"],
             "outputCapture": "std",
         },
         {
-            "name": "Client NPM",
+            "name": "Frontend NPM",
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceFolder}/client",
+            "cwd": "${workspaceFolder}/frontend",
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run", "serve"],
             "outputCapture": "std",
@@ -27,14 +27,14 @@
           "request": "launch",
           "name": "vuejs: firefox",
           "url": "http://localhost:8080",
-          "webRoot": "${workspaceFolder}/client/src",
+          "webRoot": "${workspaceFolder}/frontend/src",
           "pathMappings": [{ "url": "webpack:///src/", "path": "${webRoot}/" }]
         }
     ],
     "compounds": [
         {
-            "name": "Client+Server NPM",
-            "configurations": ["Client NPM", "Server NPM"]
+            "name": "Frontend+Backend NPM",
+            "configurations": ["Frontend NPM", "Backend NPM"]
         }
     ]
 }
