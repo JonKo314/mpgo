@@ -1,17 +1,6 @@
 <template>
   <div id="app">
-    <div v-if="!user">
-      <label>
-        <span>Username:</span>
-        <input type="text" v-model="username" />
-      </label>
-      <label>
-        <span>Password:</span>
-        <input type="password" v-model="password" />
-      </label>
-      <button type="button" v-on:click="login()">Login</button>
-      <button type="button" v-on:click="register()">Register</button>
-    </div>
+    <LoginForm v-if="!user" v-bind:user.sync="user" />
 
     <div v-if="user">
       <span>Playing as {{ user.name }}</span>
@@ -162,11 +151,14 @@
 </template>
 
 <script>
+  import utils from "./utils";
+  import LoginForm from "./components/LoginForm.vue";
   import GoStone from "./components/GoStone.vue";
 
   export default {
     name: "App",
     components: {
+      LoginForm,
       GoStone,
     },
     data: function () {
@@ -429,12 +421,12 @@
       },
 
       getGames: async function () {
-        this.games = await this.fetch("games/list");
+        this.games = await utils.fetch("games/list");
       },
 
       createGame: async function () {
         this.games.push(
-          await this.fetch("games", {
+          await utils.fetch("games", {
             method: "POST",
             body: JSON.stringify({
               boardSize: this.newGame.boardSize,
@@ -445,12 +437,12 @@
       },
 
       haltTurn: async function () {
-        await this.fetch(`games/${this.gameId}/haltTurn`, { method: "POST" });
+        await utils.fetch(`games/${this.gameId}/haltTurn`, { method: "POST" });
         this.getGameSate();
       },
 
       endTurn: async function () {
-        await this.fetch(`games/${this.gameId}/endTurn`, { method: "POST" });
+        await utils.fetch(`games/${this.gameId}/endTurn`, { method: "POST" });
         this.update();
       },
 
@@ -460,7 +452,7 @@
       },
 
       getGameSate: async function () {
-        const gameState = await this.fetch(`games/${this.gameId}/gameState`);
+        const gameState = await utils.fetch(`games/${this.gameId}/gameState`);
         this.boardSize = gameState.boardSize;
         this.turnCounter = gameState.turnCounter;
         this.turnEnd = new Date(gameState.turnEnd);
@@ -472,11 +464,11 @@
       },
 
       getStones: async function () {
-        this.stones = await this.fetch(`games/${this.gameId}/getStones`);
+        this.stones = await utils.fetch(`games/${this.gameId}/getStones`);
       },
 
       tileClick: async function (tile) {
-        const stone = await this.fetch(`games/${this.gameId}/addStone`, {
+        const stone = await utils.fetch(`games/${this.gameId}/addStone`, {
           method: "POST",
           body: JSON.stringify({
             x: tile.x / 10,
@@ -492,7 +484,7 @@
           return;
         }
 
-        await this.fetch(`games/${this.gameId}/removePendingStone`, {
+        await utils.fetch(`games/${this.gameId}/removePendingStone`, {
           method: "POST",
           body: JSON.stringify(stone),
         });
@@ -520,82 +512,22 @@
       },
 
       checkLogin: async function () {
-        this.user = await this.fetch("checkLogin");
-      },
-
-      login: async function () {
-        this.user = await this.fetch("login", {
-          method: "POST",
-          body: JSON.stringify({
-            username: this.username,
-            password: this.password,
-          }),
-        });
-        this.password = null;
-      },
-
-      register: async function () {
-        this.user = await this.fetch("register", {
-          method: "POST",
-          body: JSON.stringify({
-            username: this.username,
-            password: this.password,
-          }),
-        });
-        this.password = null;
+        this.user = await utils.fetch("checkLogin");
       },
 
       logout: async function () {
-        await this.fetch("logout");
+        await utils.fetch("logout");
         this.user = null;
       },
 
       setColor: async function () {
-        await this.fetch("setColors", {
+        await utils.fetch("setColors", {
           method: "POST",
           body: JSON.stringify({
             color: this.user.color,
             secondaryColor: this.user.secondaryColor,
           }),
         });
-      },
-
-      fetch: async function (resource, init) {
-        try {
-          const defaultInit = {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-          };
-          const response = await fetch(
-            `/api/${resource}`,
-            Object.assign(defaultInit, init)
-          );
-
-          if (!response.ok) {
-            throw new Error(response.statusText + "(" + response.status + ")");
-          }
-
-          const contentType = response.headers.get("content-type");
-          if (contentType.includes("text/plain")) {
-            const text = await response.text();
-            if (text !== "OK") {
-              throw new Error(`JSON expected but response was text:\n${text}`);
-            }
-            return true;
-          }
-
-          if (contentType.includes("application/json")) {
-            return await response.json();
-          }
-
-          throw new Error(`Response has unknown content type: ${contentType}`);
-        } catch (error) {
-          alert(error);
-          throw error;
-        }
       },
     },
   };
