@@ -3,27 +3,11 @@
     <LoginForm v-if="!user" v-bind:user.sync="user" />
     <UserInfo v-if="user" v-model="user" v-bind:user.sync="user" />
 
-    <div v-if="!gameId">
-      <p>Select game:</p>
-      <ul>
-        <li
-          v-for="game in games"
-          v-on:click="setGame(game._id)"
-          v-bind:key="game._id"
-        >
-          {{ game._id }}
-        </li>
-      </ul>
-      <label>
-        <span>Board size: </span>
-        <input type="number" v-model="newGame.boardSize" />
-      </label>
-      <label>
-        <span>Turn time: </span>
-        <input type="number" v-model="newGame.turnTime" />
-      </label>
-      <button type="button" v-on:click="createGame()">New game</button>
-    </div>
+    <GameList
+      v-if="!gameId"
+      v-on:update:gameId="setGame($event)"
+      v-bind:games="games"
+    />
 
     <div v-if="gameId">
       <div>
@@ -126,6 +110,7 @@
   import utils from "./utils";
   import LoginForm from "./components/LoginForm.vue";
   import UserInfo from "./components/UserInfo.vue";
+  import GameList from "./components/GameList.vue";
   import GoStone from "./components/GoStone.vue";
 
   export default {
@@ -133,6 +118,7 @@
     components: {
       LoginForm,
       UserInfo,
+      GameList,
       GoStone,
     },
     data: function () {
@@ -396,18 +382,6 @@
 
       getGames: async function () {
         this.games = await utils.fetch("games/list");
-      },
-
-      createGame: async function () {
-        this.games.push(
-          await utils.fetch("games", {
-            method: "POST",
-            body: JSON.stringify({
-              boardSize: this.newGame.boardSize,
-              turnTime: this.newGame.turnTime * 1000,
-            }),
-          })
-        );
       },
 
       haltTurn: async function () {
