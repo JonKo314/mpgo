@@ -1,35 +1,7 @@
 <template>
   <div id="app">
     <LoginForm v-if="!user" v-bind:user.sync="user" />
-
-    <div v-if="user">
-      <span>Playing as {{ user.name }}</span>
-      <button type="button" v-on:click="logout()">Logout</button>
-      <br />
-      <label>
-        <span>Primary Color:</span>
-        <input type="color" v-model="user.color" v-on:change="setColor()" />
-      </label>
-      <label>
-        <span>Secondary Color:</span>
-        <input
-          type="color"
-          v-model="user.secondaryColor"
-          v-on:change="setColor()"
-        />
-      </label>
-      <br />
-      <svg viewBox="-5 -5 10 10" height="50" width="50">
-        <circle cx="0" cy="0" r="4.5" class="stone" v-bind:fill="user.color" />
-        <circle
-          cx="0"
-          cy="0"
-          r="2"
-          class="newStoneMarker"
-          v-bind:stroke="user.secondaryColor"
-        />
-      </svg>
-    </div>
+    <UserInfo v-if="user" v-model="user" v-bind:user.sync="user" />
 
     <div v-if="!gameId">
       <p>Select game:</p>
@@ -153,12 +125,14 @@
 <script>
   import utils from "./utils";
   import LoginForm from "./components/LoginForm.vue";
+  import UserInfo from "./components/UserInfo.vue";
   import GoStone from "./components/GoStone.vue";
 
   export default {
     name: "App",
     components: {
       LoginForm,
+      UserInfo,
       GoStone,
     },
     data: function () {
@@ -513,21 +487,6 @@
 
       checkLogin: async function () {
         this.user = await utils.fetch("checkLogin");
-      },
-
-      logout: async function () {
-        await utils.fetch("logout");
-        this.user = null;
-      },
-
-      setColor: async function () {
-        await utils.fetch("setColors", {
-          method: "POST",
-          body: JSON.stringify({
-            color: this.user.color,
-            secondaryColor: this.user.secondaryColor,
-          }),
-        });
       },
     },
   };
