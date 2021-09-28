@@ -23,6 +23,18 @@
             "outputCapture": "std",
         },
         {
+            "name": "Pinia Frontend NPM",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/vite-pinia-frontend",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "outputCapture": "std",
+        },
+        {
           "type": "firefox",
           "request": "launch",
           "name": "vuejs: firefox",
@@ -35,6 +47,13 @@
         {
             "name": "Frontend+Backend NPM",
             "configurations": ["Frontend NPM", "Backend NPM"]
+        },
+        {
+            "name": "Pinia Frontend+Backend NPM",
+            "configurations": [
+                "Pinia Frontend NPM",
+                "Backend NPM"
+            ]
         }
     ]
 }
