@@ -2,8 +2,6 @@
   import LoginForm from "./components/LoginForm.vue";
   import UserInfo from "./components/UserInfo.vue";
   import { useStore } from "./stores/user";
-  import GameList from "./components/GameList.vue";
-  import GameInfo from "./components/GameInfo.vue";
 
   useStore().checkLogin();
 </script>
@@ -11,8 +9,7 @@
 <template>
   <LoginForm />
   <UserInfo />
-  <GameList />
-  <GameInfo />
+  <router-view />
 </template>
 
 <style>

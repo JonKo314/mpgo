@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
 import { fetch } from "../utils";
 
+// TODO: Should this even be a store or is this unnecessary overhead?
 export const useStore = defineStore("games", {
   state: () => {
-    return { games: [], game: null };
+    return { games: [] };
   },
   actions: {
     async fetchGames() {
@@ -20,10 +21,6 @@ export const useStore = defineStore("games", {
           }),
         })
       );
-    },
-
-    async setGame(gameId) {
-      this.game = { _id: gameId }; // TODO
     },
   },
 });

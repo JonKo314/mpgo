@@ -4,13 +4,9 @@
   import { useStore } from "../stores/games";
 
   const store = useStore();
-  const { game, games } = storeToRefs(store);
+  const { games } = storeToRefs(store);
 
   const newGame = reactive({ boardSize: null, turnTime: null });
-
-  const setGame = (gameId) => {
-    store.setGame(gameId);
-  };
 
   const createGame = () => {
     store.createGame(newGame.boardSize, newGame.turnTime);
@@ -20,15 +16,13 @@
 </script>
 
 <template>
-  <div v-if="!game">
+  <div>
     <p>Select game:</p>
     <ul>
-      <li
-        v-for="game in games"
-        v-on:click="setGame(game._id)"
-        v-bind:key="game._id"
-      >
-        {{ game._id }}
+      <li v-for="game in games" v-bind:key="game._id">
+        <router-link v-bind:to="{ name: 'game', params: { gameId: game._id } }">
+          {{ game._id }}
+        </router-link>
       </li>
     </ul>
     <label>
