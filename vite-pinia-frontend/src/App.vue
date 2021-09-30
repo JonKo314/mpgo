@@ -1,21 +1,46 @@
 <script setup>
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
-import HelloWorld from './components/HelloWorld.vue'
+  import LoginForm from "./components/LoginForm.vue";
+  import UserInfo from "./components/UserInfo.vue";
+  import { useStore } from "./stores/user";
+  import GameList from "./components/GameList.vue";
+  import GameInfo from "./components/GameInfo.vue";
+
+  useStore().checkLogin();
 </script>
 
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Hello Vue 3 + Vite" />
+  <LoginForm />
+  <UserInfo />
+  <GameList />
+  <GameInfo />
 </template>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+  line,
+  circle {
+    stroke-width: 0.2;
+  }
+
+  line {
+    stroke: black;
+  }
+
+  circle.stone {
+    stroke: black;
+  }
+
+  circle.stone.pending {
+    fill-opacity: 0.5;
+    stroke-opacity: 0.5;
+  }
+
+  circle.newStoneMarker {
+    fill: none;
+    stroke-width: 0.5;
+  }
+
+  circle.heatIndicator {
+    stroke-width: 0.5;
+    fill: none;
+  }
 </style>

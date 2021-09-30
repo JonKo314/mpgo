@@ -1,7 +1,7 @@
 <script setup>
   // import { ref } from 'vue'
   import { storeToRefs } from "pinia";
-  import { useStore } from "../stores/main";
+  import { useStore } from "../stores/hello";
 
   defineProps({
     msg: String,
