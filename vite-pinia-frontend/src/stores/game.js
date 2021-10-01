@@ -14,9 +14,11 @@ export const useStore = defineStore("game", {
       stones: [],
     };
   },
+
   actions: {
     update(gameId) {
-      if (gameId) {
+      if (gameId && gameId !== this.gameId) {
+        this.$reset();
         this.gameId = gameId;
       }
       this.getGameState();
@@ -66,7 +68,25 @@ export const useStore = defineStore("game", {
       await fetch(`games/${this.gameId}/endTurn`, { method: "POST" });
       this.update();
     },
+
+    async addStone(x, y) {
+      const stone = await fetch(`games/${this.gameId}/addStone`, {
+        method: "POST",
+        body: JSON.stringify({ x, y, isPending: true }),
+      });
+      this.stones.push(stone);
+    },
+
+    async removePendingStone(stone) {
+      await fetch(`games/${this.gameId}/removePendingStone`, {
+        method: "POST",
+        body: JSON.stringify(stone),
+      });
+
+      this.stones.splice(this.stones.indexOf(stone), 1);
+    },
   },
+
   getters: {
     timeLeft: (state) => {
       const twoDigits = (a) => a.toString().padStart(2, "0");
@@ -87,6 +107,39 @@ export const useStore = defineStore("game", {
       return hours > 0
         ? prettyTime(hours, minutes)
         : prettyTime(minutes, seconds);
+    },
+
+    // TODO: Deduplicate code, see gameLogic.js
+    heatMaps: (state) => {
+      const getDistance = (a, b) => {
+        const dx2 = Math.pow(Math.abs(a.x - b.x), 2);
+        const dy2 = Math.pow(Math.abs(a.y - b.y), 2);
+        return Math.sqrt(dx2 + dy2);
+      };
+
+      const heatMaps = new Map(
+        state.players.map((player) => [
+          player.user.name,
+          Array(state.boardSize)
+            .fill()
+            .map(() => Array(state.boardSize).fill(0)),
+        ])
+      );
+
+      state.stones
+        .filter((stone) => !stone.isPending && stone.removedBy !== "CONFLICT")
+        .forEach((stone) => {
+          for (let y = 0; y < state.boardSize; ++y) {
+            for (let x = 0; x < state.boardSize; ++x) {
+              const distance = Math.max(1.0, getDistance({ x, y }, stone));
+              heatMaps.get(stone.player.user.name)[y][x] +=
+                Math.pow(0.5, state.turnCounter - stone.placedOnTurn - 1) /
+                distance;
+            }
+          }
+        });
+
+      return heatMaps;
     },
   },
 });

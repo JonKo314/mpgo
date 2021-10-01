@@ -2,6 +2,7 @@
   import { storeToRefs } from "pinia";
   import { useStore } from "../stores/game";
   import { useStore as useUserStore } from "../stores/user";
+  import BoardView from "./BoardView.vue";
 
   const props = defineProps({
     gameId: String,
@@ -30,4 +31,5 @@
     <button v-if="user" type="button" v-on:click="haltTurn()">Halt turn</button>
     <button v-if="user" type="button" v-on:click="endTurn()">End turn</button>
   </div>
+  <BoardView />
 </template>

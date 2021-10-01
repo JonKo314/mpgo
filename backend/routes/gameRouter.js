@@ -40,7 +40,10 @@ router.get("/:gameId/getStones", async (req, res) => {
 });
 
 router.get("/:gameId/gameState", async (req, res) => {
-  const game = await Game.findById(req.params.gameId);
+  const game = await Game.findById(req.params.gameId).populate({
+    path: "players",
+    populate: { path: "user" },
+  });
   delete game.stones;
   res.json(game);
 });

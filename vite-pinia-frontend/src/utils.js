@@ -1,3 +1,5 @@
+const SVG_FACTOR = 10;
+
 async function _fetch(resource, init) {
   try {
     const defaultInit = {
@@ -36,4 +38,4 @@ async function _fetch(resource, init) {
   }
 }
 
-export { _fetch as fetch };
+export { SVG_FACTOR, _fetch as fetch };
