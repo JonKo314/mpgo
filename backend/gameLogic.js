@@ -5,6 +5,7 @@ const instances = new Map();
 const MAX_DATE = new Date(8640000000000000);
 
 exports.get = async function (id) {
+  // TODO: Beware unknown IDs
   let gameLogic = instances.get(id);
   if (gameLogic) {
     return gameLogic;
@@ -52,6 +53,7 @@ class GameLogic {
     this.game = null;
     this.board = [];
     this.turnChangeTimeout = null;
+    this.observers = new Set();
   }
 
   async initialize() {
@@ -75,6 +77,18 @@ class GameLogic {
     }
   }
 
+  subscribe(callback) {
+    this.observers.add(callback);
+  }
+
+  unsubscribe(callback) {
+    this.observers.delete(callback);
+  }
+
+  notifyObservers() {
+    this.observers.forEach((callback) => callback());
+  }
+
   getPlayer(user) {
     return this.game.players.find((player) => player.user.equals(user));
   }
@@ -82,6 +96,7 @@ class GameLogic {
   async addPlayer(player) {
     this.game.players.push(player);
     await this.game.save();
+    this.notifyObservers();
     return this.game.players.find((storedPlayer) =>
       storedPlayer.equals(player)
     );
@@ -146,6 +161,7 @@ class GameLogic {
     this.game.turnEnd = MAX_DATE;
 
     await this.game.save();
+    this.notifyObservers();
     console.log(
       `Game ${this.game.id} saved. Turn halted: ${this.game.turnCounter} End: ${this.game.turnEnd}`
     );
@@ -155,6 +171,7 @@ class GameLogic {
     this.clearTurnChangeTimeout();
     this.game.turnEnd = Date.now();
     await this.game.save();
+    this.notifyObservers();
     console.log(
       `Game ${this.game.id} saved. Turn forced to end: ${this.game.turnCounter} End: ${this.game.turnEnd}`
     );
@@ -257,6 +274,7 @@ class GameLogic {
     this.game.turnCounter++;
 
     await this.game.save();
+    this.notifyObservers();
     console.log(
       `Game ${this.game.id} saved. Turn: ${this.game.turnCounter} End: ${this.game.turnEnd}`
     );

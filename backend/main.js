@@ -5,11 +5,13 @@ const bcrypt = require("bcrypt");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const path = require("path");
+const http = require("http");
 
 const saltRounds = 10;
 
 const gameRouter = require("./routes/gameRouter");
 const User = require("./models/user");
+const Notifications = require("./notifications");
 
 // Source: https://github.com/passport/express-4.x-local-example/blob/master/server.js
 passport.use(
@@ -167,6 +169,9 @@ db.once("open", async () => {
   console.log("MongoDB connection opened");
 });
 
-app.listen(port, () => {
+const server = http.createServer(app);
+Notifications(server);
+
+server.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });

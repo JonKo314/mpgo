@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { fetch } from "../utils";
+import { useStore as useSocketStore } from "./socket";
 
 export const useStore = defineStore("game", {
   state: () => {
@@ -18,6 +19,12 @@ export const useStore = defineStore("game", {
   actions: {
     update(gameId) {
       if (gameId && gameId !== this.gameId) {
+        const socketStore = useSocketStore();
+        if (this.gameId) {
+          socketStore.unsubscribeGame(this.gameId, () => this.update());
+        }
+        socketStore.subscribeGame(gameId, () => this.update());
+
         this.$reset();
         this.gameId = gameId;
       }
@@ -34,9 +41,6 @@ export const useStore = defineStore("game", {
       this.$patch(gameState);
 
       this.updateMillisecondsLeft();
-      if (this.millisecondsLeft !== Infinity) {
-        setTimeout(this.update, this.millisecondsLeft);
-      }
     },
 
     async getStones() {
@@ -61,12 +65,10 @@ export const useStore = defineStore("game", {
 
     async haltTurn() {
       await fetch(`games/${this.gameId}/haltTurn`, { method: "POST" });
-      this.getGameState();
     },
 
     async endTurn() {
       await fetch(`games/${this.gameId}/endTurn`, { method: "POST" });
-      this.update();
     },
 
     async addStone(x, y) {

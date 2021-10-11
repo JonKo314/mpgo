@@ -1,0 +1,80 @@
+import { defineStore } from "pinia";
+
+export const useStore = defineStore("socket", {
+  state: () => {
+    return {
+      socket: null,
+      connected: false,
+      gameSubscriptions: new Map(),
+      queue: [],
+    };
+  },
+
+  actions: {
+    ready() {
+      if (this.socket) {
+        return this.connected;
+      }
+      // TODO: Which WebSocket URL if not running in development mode on localhost?
+      const socket = new WebSocket(`ws://${window.location.host}/ws`);
+      socket.onopen = () => {
+        this.connected = true;
+        this.sendQueue();
+      };
+      socket.onerror = (error) => console.warn(error);
+      socket.onmessage = (message) => this.handleMessage(message);
+      this.socket = socket;
+      return false;
+    },
+
+    send(message) {
+      if (this.ready()) {
+        this.socket.send(message);
+      } else {
+        this.queue.push(message);
+      }
+    },
+
+    sendQueue() {
+      this.queue.forEach((message) => this.socket.send(message));
+      this.queue.length = 0;
+    },
+
+    handleMessage(message) {
+      try {
+        const json = JSON.parse(message.data);
+        if (
+          json.action === "updateGame" &&
+          this.gameSubscriptions.has(json.id)
+        ) {
+          this.gameSubscriptions.get(json.id).forEach((callback) => callback());
+        } else {
+          console.log(`Unhandled json from socket:`);
+          console.log(json);
+        }
+      } catch (error) {
+        console.warn(`Unable to parse WebSocket message due to: ${error}`);
+        console.warn("Message was:");
+        console.warn(message);
+      }
+    },
+
+    subscribeGame(gameId, callback) {
+      if (!this.gameSubscriptions.has(gameId)) {
+        this.gameSubscriptions.set(gameId, new Set());
+        this.send(JSON.stringify({ action: "subscribeGame", id: gameId }));
+      }
+      this.gameSubscriptions.get(gameId).add(callback);
+    },
+
+    unsubscribeGame(gameId, callback) {
+      if (this.gameSubscriptions.has(gameId)) {
+        this.gameSubscriptions.get(gameId).delete(callback);
+        if (!this.gameSubscriptions.get(gameId).size) {
+          this.send(JSON.stringify({ action: "unsubscribeGame", id: gameId }));
+          this.gameSubscriptions.delete(gameId);
+        }
+      }
+    },
+  },
+});
