@@ -41,8 +41,8 @@
           )
           .sort(
             (firstPlayer, secondPlayer) =>
-              playerHeats.value.get(secondPlayer.user.name) -
-              playerHeats.value.get(firstPlayer.user.name)
+              playerHeats.value.get(firstPlayer.user.name) -
+              playerHeats.value.get(secondPlayer.user.name)
           )
   );
 
