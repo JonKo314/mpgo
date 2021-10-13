@@ -94,6 +94,10 @@ class GameLogic {
   }
 
   async addPlayer(player) {
+    if (!this.mayAddPlayer(player)) {
+      // TODO: Communicate rejection reason ( if(?getRejectionReason?(player)) )
+      throw new Error("Not allowed to add this player.");
+    }
     this.game.players.push(player);
     await this.game.save();
     this.notifyObservers();
@@ -102,7 +106,29 @@ class GameLogic {
     );
   }
 
+  mayAddPlayer(player) {
+    // TODO: Add options (late join, max player count, ...)
+    return (
+      !this.game.started &&
+      !this.game.players.some((storedPlayer) =>
+        storedPlayer.user.equals(player.user)
+      )
+    );
+  }
+
+  async startGame() {
+    if (this.game.started) {
+      throw new Error(`Can't start game. Game has already started.`);
+    }
+    this.game.started = true;
+    await this.game.save();
+    this.notifyObservers();
+  }
+
   async addStone(player, stone) {
+    if (!this.game.started) {
+      throw new Error(`Stone rejected. Game hasn't started yet.`);
+    }
     if (
       this.game.currentStones.some(
         (currentStone) =>

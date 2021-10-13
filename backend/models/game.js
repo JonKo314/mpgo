@@ -7,6 +7,7 @@ const gameSchema = new mongoose.Schema({
   turnCounter: { type: Number },
   turnEnd: { type: Date },
   players: [PlayerSchema],
+  started: { type: Boolean, default: false },
 });
 
 gameSchema.virtual("stones").get(function () {

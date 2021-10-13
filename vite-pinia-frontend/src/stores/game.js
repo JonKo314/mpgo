@@ -13,6 +13,7 @@ export const useStore = defineStore("game", {
       players: [],
       millisecondsLeft: Infinity,
       stones: [],
+      started: false,
     };
   },
 
@@ -61,6 +62,14 @@ export const useStore = defineStore("game", {
           : this.millisecondsLeft % 1e3;
 
       setTimeout(this.updateMillisecondsLeft, millisecondsUntilClockUpdate);
+    },
+
+    async joinGame() {
+      await fetch(`games/${this.gameId}/join`, { method: "POST" });
+    },
+
+    async startGame() {
+      await fetch(`games/${this.gameId}/start`, { method: "POST" });
     },
 
     async haltTurn() {
