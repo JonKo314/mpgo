@@ -15,6 +15,7 @@ export const useStore = defineStore("socket", {
       if (this.socket) {
         return this.connected;
       }
+
       // TODO: Which WebSocket URL if not running in development mode on localhost?
       const socket = new WebSocket(`ws://${window.location.host}/ws`);
       socket.onopen = () => {
@@ -23,8 +24,24 @@ export const useStore = defineStore("socket", {
       };
       socket.onerror = (error) => console.warn(error);
       socket.onmessage = (message) => this.handleMessage(message);
+      socket.onclose = (event) => {
+        console.warn(event);
+        // TODO: Consider circumstances and decide, if recovery is desired
+        // Hot reload of server: Recovery desired (event.wasClean = false)
+        if (!event.wasClean) {
+          this.recover();
+        }
+      };
       this.socket = socket;
       return false;
+    },
+
+    recover() {
+      const remainingGameSubscriptions = this.gameSubscriptions;
+      this.$reset();
+      remainingGameSubscriptions.forEach((callbacks, gameId) =>
+        callbacks.forEach((callback) => this.subscribeGame(gameId, callback))
+      );
     },
 
     send(message) {
