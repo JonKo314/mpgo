@@ -32,6 +32,6 @@
     <span>Turn {{ turnCounter }}</span>
     <button v-if="user" type="button" v-on:click="haltTurn()">Halt turn</button>
     <button v-if="user" type="button" v-on:click="endTurn()">End turn</button>
-    <BoardView />
   </div>
+  <BoardView v-if="started" />
 </template>
