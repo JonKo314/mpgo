@@ -14,15 +14,6 @@
             "outputCapture": "std",
         },
         {
-            "name": "Frontend NPM",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceFolder}/frontend",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "serve"],
-            "outputCapture": "std",
-        },
-        {
             "name": "Pinia Frontend NPM",
             "type": "node",
             "request": "launch",
@@ -33,21 +24,9 @@
                 "dev"
             ],
             "outputCapture": "std",
-        },
-        {
-          "type": "firefox",
-          "request": "launch",
-          "name": "vuejs: firefox",
-          "url": "http://localhost:8080",
-          "webRoot": "${workspaceFolder}/frontend/src",
-          "pathMappings": [{ "url": "webpack:///src/", "path": "${webRoot}/" }]
         }
     ],
     "compounds": [
-        {
-            "name": "Frontend+Backend NPM",
-            "configurations": ["Frontend NPM", "Backend NPM"]
-        },
         {
             "name": "Pinia Frontend+Backend NPM",
             "configurations": [

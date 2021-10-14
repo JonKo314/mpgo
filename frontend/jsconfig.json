@@ -1,7 +1,0 @@
-// Used by the VS Code extension Vetur
-
-{
-  "include": [
-    "./src/**/*"
-  ]
-}
