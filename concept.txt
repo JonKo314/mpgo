@@ -21,3 +21,6 @@ Conflict resolvement:
 - Passes
 - Priority by closest own stone
 - Priority by distance to previous move(s)
+- Multicolored stone: A stone which shares the colors of all conflicting stones.
+    Variants: Multicolored stones need liberties for (A) all of their colors or (B) at least one of their colors. 
+    Credits: https://forums.online-go.com/t/fractional-team-go-game-1/37048/216

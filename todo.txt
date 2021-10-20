@@ -16,7 +16,6 @@
     - legal considerations
     ? HTTPS
 
-- Conflict indicator
 - Persist user sessions
 - game analysis (investigate variations)
 - counting

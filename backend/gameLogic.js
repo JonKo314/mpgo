@@ -29,6 +29,7 @@ exports.get = async function (id) {
 };
 
 exports.newGame = async function (options) {
+  // TODO: Don't start turn timer before the game has started
   const turnTime = options.turnTime || 60000;
   const game = new Game({
     ...{
@@ -57,10 +58,9 @@ class GameLogic {
   }
 
   async initialize() {
-    const game = await Game.findById(this.id).populate({
-      path: "players",
-      populate: { path: "user" },
-    });
+    // TODO: Apparently subdocuments don't need to be populated
+    // They are directly embedded, not referenced via an ID
+    const game = await Game.findById(this.id, "+players.user");
     if (!game) {
       throw new Error(`Game ${this.id} not found!`);
     }
@@ -90,7 +90,7 @@ class GameLogic {
   }
 
   getPlayer(user) {
-    return this.game.players.find((player) => player.user.equals(user));
+    return this.game.players.find((player) => user.equals(player.user));
   }
 
   async addPlayer(player) {
@@ -111,7 +111,7 @@ class GameLogic {
     return (
       !this.game.started &&
       !this.game.players.some((storedPlayer) =>
-        storedPlayer.user.equals(player.user)
+        player.user.equals(storedPlayer.user)
       )
     );
   }
@@ -321,7 +321,7 @@ class GameLogic {
 
       const [minHeat, minHeatStones, higherHeatStones] = pendingStones.reduce(
         ([minHeat, minHeatStones, higherHeatStones], stone) => {
-          const heat = heatMaps.get(stone.player.user.name)[stone.y][stone.x];
+          const heat = heatMaps.get(stone.player._id)[stone.y][stone.x];
           if (heat < minHeat) {
             return [heat, [stone], [...higherHeatStones, ...minHeatStones]];
           }
@@ -350,14 +350,12 @@ class GameLogic {
       return Math.sqrt(dx2 + dy2);
     };
 
-    // TODO: Use this.game.players
-    // TODO: user name is nice for debugging, but requires many subdocuments
-    const userNames = new Set(
-      this.game.stones.map((stone) => stone.player.user.name)
+    const playerKeys = new Set(
+      this.game.stones.map((stone) => stone.player._id)
     );
     const heatMaps = new Map(
-      [...userNames].map((userName) => [
-        userName,
+      [...playerKeys].map((playerKey) => [
+        playerKey,
         Array(this.game.boardSize)
           .fill()
           .map(() => Array(this.game.boardSize).fill(0)),
@@ -370,7 +368,7 @@ class GameLogic {
         for (let y = 0; y < this.game.boardSize; ++y) {
           for (let x = 0; x < this.game.boardSize; ++x) {
             const distance = Math.max(1.0, getDistance({ x, y }, stone));
-            heatMaps.get(stone.player.user.name)[y][x] +=
+            heatMaps.get(stone.player._id)[y][x] +=
               Math.pow(0.5, this.game.turnCounter - stone.placedOnTurn - 1) /
               distance;
           }

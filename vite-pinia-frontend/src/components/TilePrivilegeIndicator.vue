@@ -2,7 +2,7 @@
   import { storeToRefs } from "pinia";
   import { computed } from "vue";
   import { useStore } from "../stores/game";
-  import { useStore as useUserStore } from "../stores/user";
+  import { useStore as usePlayerStore } from "../stores/player";
   import { SVG_FACTOR } from "../utils";
 
   const props = defineProps({
@@ -11,38 +11,36 @@
 
   const store = useStore();
   const { players } = storeToRefs(store);
-  const userStore = useUserStore();
-
   const _x = computed(() => props.tile.x / SVG_FACTOR);
   const _y = computed(() => props.tile.y / SVG_FACTOR);
 
   const playerHeats = computed(() => {
     const map = new Map();
     store.players.forEach((player) => {
-      map.set(
-        player.user.name,
-        store.heatMaps.get(player.user.name)[_y.value][_x.value]
-      );
+      map.set(player._id, store.heatMaps.get(player._id)[_y.value][_x.value]);
     });
     return map;
   });
 
+  const playerStore = usePlayerStore();
+  playerStore.ready();
+
   const playerHeat = computed(() =>
-    !userStore.user ? 0 : playerHeats.value.get(userStore.user.name)
+    !playerStore.player ? 0 : playerHeats.value.get(playerStore.player._id)
   );
   const subjectivePrivilegedPlayers = computed(() =>
-    !userStore.user
+    !playerStore.player
       ? []
       : store.players
           .filter(
             (player) =>
-              player.user.name !== userStore.user.name &&
-              playerHeats.value.get(player.user.name) <= playerHeat.value
+              player._id !== playerStore.player._id &&
+              playerHeats.value.get(player._id) <= playerHeat.value
           )
           .sort(
             (firstPlayer, secondPlayer) =>
-              playerHeats.value.get(firstPlayer.user.name) -
-              playerHeats.value.get(secondPlayer.user.name)
+              playerHeats.value.get(firstPlayer._id) -
+              playerHeats.value.get(secondPlayer._id)
           )
   );
 
@@ -92,16 +90,16 @@
     <circle
       class="heatIndicator"
       v-for="player in players"
-      v-bind:key="player.user.name"
+      v-bind:key="player._id"
       v-bind:cx="tile.x"
       v-bind:cy="tile.y"
       v-bind:stroke="player.color"
-      v-bind:stroke-opacity="playerHeats.get(player.user.name) * 0.9"
+      v-bind:stroke-opacity="playerHeats.get(player._id) * 0.9"
       v-bind:r="0.28 * SVG_FACTOR"
     />
     <path
       v-for="[player, path] in subjectivePrivilegePlayerPaths"
-      v-bind:key="player.user.name"
+      v-bind:key="player._id"
       v-bind:d="path"
       v-bind:fill="player.color"
       fill-opacity="0.8"

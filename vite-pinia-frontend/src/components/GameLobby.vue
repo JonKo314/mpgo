@@ -17,7 +17,7 @@
 <template>
   <ul>
     <li v-for="player in players" v-bind:key="player._id">
-      {{ player.user.name }}
+      {{ player._id }}
     </li>
   </ul>
   <button v-on:click="join()">Join</button>

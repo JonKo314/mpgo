@@ -36,6 +36,7 @@ router.get("/:gameId/getStones", async (req, res) => {
       // TODO: Refactor or deduplicate, see addStone()
       const player = stone.player.toObject();
       delete player.stones;
+      delete player.user;
       const apiStone = stone.toObject();
       apiStone.player = player;
       return apiStone;
@@ -45,12 +46,17 @@ router.get("/:gameId/getStones", async (req, res) => {
 });
 
 router.get("/:gameId/gameState", async (req, res) => {
-  const game = await Game.findById(req.params.gameId).populate({
-    path: "players",
-    populate: { path: "user" },
-  });
-  delete game.stones;
+  const game = await Game.findById(req.params.gameId, "-players.stones");
   res.json(game);
+});
+
+router.get("/:gameId/player", async (req, res) => {
+  if (!req.user) {
+    return res.json(null);
+  }
+
+  const gameLogic = await GameLogic.get(req.params.gameId);
+  res.json(gameLogic.getPlayer(req.user) || null);
 });
 
 router.post("/:gameId/join", async (req, res, next) => {

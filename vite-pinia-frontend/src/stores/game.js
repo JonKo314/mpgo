@@ -10,8 +10,8 @@ export const useStore = defineStore("game", {
       turnTime: 0,
       turnCounter: 0,
       turnEnd: null,
-      players: [],
       millisecondsLeft: Infinity,
+      players: [],
       stones: [],
       started: false,
     };
@@ -130,7 +130,7 @@ export const useStore = defineStore("game", {
 
       const heatMaps = new Map(
         state.players.map((player) => [
-          player.user.name,
+          player._id,
           Array(state.boardSize)
             .fill()
             .map(() => Array(state.boardSize).fill(0)),
@@ -143,7 +143,7 @@ export const useStore = defineStore("game", {
           for (let y = 0; y < state.boardSize; ++y) {
             for (let x = 0; x < state.boardSize; ++x) {
               const distance = Math.max(1.0, getDistance({ x, y }, stone));
-              heatMaps.get(stone.player.user.name)[y][x] +=
+              heatMaps.get(stone.player._id)[y][x] +=
                 Math.pow(0.5, state.turnCounter - stone.placedOnTurn - 1) /
                 distance;
             }
