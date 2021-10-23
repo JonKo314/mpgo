@@ -39,7 +39,7 @@ exports.newGame = async function (options) {
     ...{
       turnTime: turnTime,
       turnCounter: 1,
-      turnEnd: new Date(Date.now() + turnTime),
+      turnEnd: MAX_DATE,
       stones: [],
     },
   });
@@ -121,8 +121,13 @@ class GameLogic {
       throw new Error(`Can't start game. Game has already started.`);
     }
     this.game.started = true;
+    this.game.turnEnd = new Date(Date.now() + this.game.turnTime);
     await this.game.save();
     this.notifyObservers();
+
+    if (this.game.turnEnd.getTime() !== MAX_DATE.getTime()) {
+      this.setTurnChangeTimeout();
+    }
   }
 
   async addStone(player, stone) {
