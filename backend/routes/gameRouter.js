@@ -59,6 +59,20 @@ router.get("/:gameId/player", async (req, res) => {
   res.json(gameLogic.getPlayer(req.user) || null);
 });
 
+router.post("/:gameId/settings", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new Error("Login to change game settings.");
+    }
+
+    const gameLogic = await GameLogic.get(req.params.gameId);
+    await gameLogic.setSettings(req.body);
+    res.sendStatus(200);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post("/:gameId/join", async (req, res, next) => {
   try {
     if (!req.user) {

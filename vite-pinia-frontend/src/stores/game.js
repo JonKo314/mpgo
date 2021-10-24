@@ -64,6 +64,13 @@ export const useStore = defineStore("game", {
       setTimeout(this.updateMillisecondsLeft, millisecondsUntilClockUpdate);
     },
 
+    async saveSettings(settings) {
+      await fetch(`games/${this.gameId}/settings`, {
+        method: "POST",
+        body: JSON.stringify(settings),
+      });
+    },
+
     async joinGame() {
       await fetch(`games/${this.gameId}/join`, { method: "POST" });
     },

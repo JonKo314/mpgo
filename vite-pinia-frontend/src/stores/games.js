@@ -11,14 +11,11 @@ export const useStore = defineStore("games", {
       this.games = await fetch("games/list");
     },
 
-    async createGame(boardSize, turnTime) {
+    async createGame() {
       this.games.push(
         await fetch("games", {
           method: "POST",
-          body: JSON.stringify({
-            boardSize: boardSize,
-            turnTime: turnTime * 1000,
-          }),
+          body: JSON.stringify({}),
         })
       );
     },

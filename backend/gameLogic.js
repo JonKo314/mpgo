@@ -89,6 +89,17 @@ class GameLogic {
     this.observers.forEach((callback) => callback());
   }
 
+  setSettings({ boardSize, turnTime }) {
+    if (this.game.started) {
+      throw new Error("Not allowed to change settings after game has started.");
+    }
+
+    this.game.boardSize = boardSize;
+    this.game.turnTime = turnTime * 1000;
+    this.game.save();
+    this.notifyObservers();
+  }
+
   getPlayer(user) {
     return this.game.players.find((player) => user.equals(player.user));
   }

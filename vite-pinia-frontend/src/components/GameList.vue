@@ -1,15 +1,12 @@
 <script setup>
   import { storeToRefs } from "pinia";
-  import { reactive } from "vue";
   import { useStore } from "../stores/games";
 
   const store = useStore();
   const { games } = storeToRefs(store);
 
-  const newGame = reactive({ boardSize: null, turnTime: null });
-
   const createGame = () => {
-    store.createGame(newGame.boardSize, newGame.turnTime);
+    store.createGame();
   };
 
   store.fetchGames();
@@ -25,14 +22,6 @@
         </router-link>
       </li>
     </ul>
-    <label>
-      <span>Board size: </span>
-      <input type="number" v-model="newGame.boardSize" />
-    </label>
-    <label>
-      <span>Turn time: </span>
-      <input type="number" v-model="newGame.turnTime" />
-    </label>
     <button type="button" v-on:click="createGame()">New game</button>
   </div>
 </template>
