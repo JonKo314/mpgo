@@ -127,6 +127,14 @@ class GameLogic {
     );
   }
 
+  async updatePlayers(players) {
+    players.forEach((player) => {
+      Object.assign(this.game.players.id(player), player);
+    });
+    await this.game.save();
+    this.notifyObservers();
+  }
+
   async startGame() {
     if (this.game.started) {
       throw new Error(`Can't start game. Game has already started.`);

@@ -2,6 +2,7 @@
   import { storeToRefs } from "pinia";
   import { ref } from "vue";
   import { useStore } from "../stores/user";
+  import ColorIndicator from "./ColorIndicator.vue";
 
   const store = useStore();
   const { user } = storeToRefs(store);
@@ -21,6 +22,7 @@
 
 <template>
   <div v-if="user">
+    <!-- TODO: Use player.name or change text -->
     <span>Playing as {{ user.name }}</span>
     <button type="button" v-on:click="logout()">Logout</button>
     <br />
@@ -37,15 +39,10 @@
       />
     </label>
     <br />
-    <svg viewBox="-5 -5 10 10" height="50" width="50">
-      <circle cx="0" cy="0" r="4.5" class="stone" v-bind:fill="user.color" />
-      <circle
-        cx="0"
-        cy="0"
-        r="2"
-        class="newStoneMarker"
-        v-bind:stroke="user.secondaryColor"
-      />
-    </svg>
+    <ColorIndicator
+      v-bind:color="user.color"
+      v-bind:secondaryColor="user.secondaryColor"
+      size="50"
+    />
   </div>
 </template>

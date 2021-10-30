@@ -73,6 +73,31 @@ router.post("/:gameId/settings", async (req, res, next) => {
   }
 });
 
+router.post("/:gameId/colors", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new Error("Login to change player colors.");
+    }
+
+    const gameLogic = await GameLogic.get(req.params.gameId);
+    const player = gameLogic.getPlayer(req.user);
+    if (!player) {
+      throw new Error("Join game to change player colors.");
+    }
+
+    await gameLogic.updatePlayers([
+      {
+        _id: player._id,
+        color: req.body.color,
+        secondaryColor: req.body.secondaryColor,
+      },
+    ]);
+    res.sendStatus(200);
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.post("/:gameId/join", async (req, res, next) => {
   try {
     if (!req.user) {
