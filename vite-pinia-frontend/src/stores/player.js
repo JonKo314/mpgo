@@ -27,7 +27,6 @@ export const useStore = defineStore("player", {
       this.userId = userStore.user?._id ?? "";
       this.gameId = gameStore.gameId;
 
-      // TODO: Fix unknown player after joining game (neither game nor user did change)
       userStore.$subscribe((mutation, state) => {
         const userId = state.user?._id ?? "";
         if (this.userId !== userId) {
@@ -35,6 +34,7 @@ export const useStore = defineStore("player", {
           this.update();
         }
       });
+
       gameStore.$subscribe((mutation, state) => {
         if (this.gameId !== state.gameId) {
           this.gameId = state.gameId;
@@ -52,6 +52,20 @@ export const useStore = defineStore("player", {
       }
 
       this.player = await fetch(`games/${this.gameId}/player`);
+    },
+
+    async joinGame() {
+      if (!this.userId || !this.gameId) {
+        const error = new Error(
+          "Need userId and gameId to join a game. Are you logged in?"
+        );
+        alert(error);
+        throw error;
+      }
+
+      this.player = await fetch(`games/${this.gameId}/join`, {
+        method: "POST",
+      });
     },
 
     async saveColors() {

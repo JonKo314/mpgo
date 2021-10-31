@@ -7,6 +7,7 @@ module.exports = function (server) {
   instance = new Notifications(server);
 };
 
+// TODO: Test connection status (ping pong)
 class Notifications {
   constructor(server) {
     this.wss = new ws.Server({ server });

@@ -20,7 +20,7 @@
   };
 
   const join = () => {
-    store.joinGame();
+    playerStore.joinGame();
   };
 
   const start = () => {

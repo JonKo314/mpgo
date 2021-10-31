@@ -71,10 +71,6 @@ export const useStore = defineStore("game", {
       });
     },
 
-    async joinGame() {
-      await fetch(`games/${this.gameId}/join`, { method: "POST" });
-    },
-
     async startGame() {
       await fetch(`games/${this.gameId}/start`, { method: "POST" });
     },
