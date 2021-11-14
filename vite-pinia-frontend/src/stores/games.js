@@ -12,12 +12,12 @@ export const useStore = defineStore("games", {
     },
 
     async createGame() {
-      this.games.push(
-        await fetch("games", {
-          method: "POST",
-          body: JSON.stringify({}),
-        })
-      );
+      const game = await fetch("games", {
+        method: "POST",
+        body: JSON.stringify({}),
+      });
+      this.games.push(game);
+      return game;
     },
   },
 });

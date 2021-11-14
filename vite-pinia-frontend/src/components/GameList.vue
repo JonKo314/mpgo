@@ -2,6 +2,7 @@
   import { storeToRefs } from "pinia";
   import { useStore } from "../stores/games";
   import { useStore as useUserStore } from "../stores/user";
+  import router from "../router";
 
   const store = useStore();
   const { games } = storeToRefs(store);
@@ -9,8 +10,9 @@
   const userStore = useUserStore();
   const { user } = storeToRefs(userStore);
 
-  const createGame = () => {
-    store.createGame();
+  const createGame = async () => {
+    const game = await store.createGame();
+    router.push({ name: "game", params: { gameId: game._id } });
   };
 
   store.fetchGames();

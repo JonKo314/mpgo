@@ -7,9 +7,10 @@
     - limit registration
     - drastically limit access for unauthenticated clients (less legal worries)
     - admin/moderator users which may
-        - create games (for now)
+        v create games (for now)
         ? delete games
         - invite users
+        - change game settings
     - extend game lobby
         ? player names
         - invite players
@@ -21,6 +22,7 @@
     ? Hash passwords on client side
     ? HTTPS
 
+- lift restrictions for unauthenticated clients and non-admin users (legal considerations)
 - limit player count
 - Persist user sessions
 - game analysis (investigate variations)
