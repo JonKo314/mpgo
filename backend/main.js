@@ -114,6 +114,7 @@ app.post("/register", async (req, res, next) => {
       passwordHash: await bcrypt.hash(credentials.password, saltRounds),
       color: "#123456",
       secondaryColor: "#fedcba",
+      // isAdmin defaults to: false
     }).save();
     delete user._doc.passwordHash;
 

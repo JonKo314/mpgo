@@ -13,9 +13,17 @@ const createPlayer = (user) => {
 
 // TODO: What happens if things are called while turn change is in progress?
 
-router.post("/", async (req, res) => {
-  const game = await GameLogic.newGame(req.body);
-  res.json(game);
+router.post("/", async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.isAdmin) {
+      throw new Error("Forbidden!"); // TODO: Allow at some point
+    }
+
+    const game = await GameLogic.newGame(req.body);
+    res.json(game);
+  } catch (error) {
+    return next(error);
+  }
 });
 
 router.get("/list", async (req, res) => {

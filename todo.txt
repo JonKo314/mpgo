@@ -8,23 +8,25 @@
     - drastically limit access for unauthenticated clients (less legal worries)
     - admin/moderator users which may
         - create games (for now)
-        - delete games
+        ? delete games
         - invite users
     - extend game lobby
         ? player names
-        - color pickers
         - invite players
         - kick players
-        - limit players (count, invitation)
+        - limit players (invitation only for now)
     - rudimentary report system to get my attention (via github?)
     - legal considerations
+    - show player color instead of user color in page-wide color indicator 
     ? Hash passwords on client side
     ? HTTPS
 
+- limit player count
 - Persist user sessions
 - game analysis (investigate variations)
 - game names
 - counting
 - variants
 - board shapes and sizes
+- backend error handling
 - Typescript?
