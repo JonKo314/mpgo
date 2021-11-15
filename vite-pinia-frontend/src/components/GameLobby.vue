@@ -3,6 +3,7 @@
   import { reactive } from "vue";
   import { useStore } from "../stores/game";
   import { useStore as usePlayerStore } from "../stores/player";
+  import { useStore as useUserStore } from "../stores/user";
   import ColorIndicator from "./ColorIndicator.vue";
 
   const store = useStore();
@@ -11,6 +12,9 @@
   const playerStore = usePlayerStore();
   const { player } = storeToRefs(playerStore);
   playerStore.ready();
+
+  const userStore = useUserStore();
+  const { user } = storeToRefs(userStore);
 
   const settings = reactive({ boardSize: null, turnTime: null });
 
@@ -36,13 +40,23 @@
   <div>
     <label>
       <span>Board size: </span>
-      <input type="number" v-model="settings.boardSize" />
+      <input
+        type="number"
+        v-model="settings.boardSize"
+        v-bind:disabled="!user || !user.isAdmin"
+      />
     </label>
     <label>
       <span>Turn time: </span>
-      <input type="number" v-model="settings.turnTime" />
+      <input
+        type="number"
+        v-model="settings.turnTime"
+        v-bind:disabled="!user || !user.isAdmin"
+      />
     </label>
-    <button v-on:click="saveSettings()">Save settings</button>
+    <button v-if="user && user.isAdmin" v-on:click="saveSettings()">
+      Save settings
+    </button>
   </div>
   <ul>
     <li v-for="somePlayer in players" v-bind:key="somePlayer._id">
@@ -66,5 +80,5 @@
     </li>
   </ul>
   <button v-on:click="join()">Join</button>
-  <button v-on:click="start()">Start</button>
+  <button v-if="user && user.isAdmin" v-on:click="start()">Start</button>
 </template>

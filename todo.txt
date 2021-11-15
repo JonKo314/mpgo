@@ -4,18 +4,11 @@
 
 - host prototype online
     - add important stuff here
-    - limit registration
+    - limit registration (invitation by admin required)
     - drastically limit access for unauthenticated clients (less legal worries)
-    - admin/moderator users which may
-        v create games (for now)
-        ? delete games
-        - invite users
-        - change game settings
     - extend game lobby
-        ? player names
-        - invite players
         - kick players
-        - limit players (invitation only for now)
+        ? limit players (?invitation only for now)
     - rudimentary report system to get my attention (via github?)
     - legal considerations
     - show player color instead of user color in page-wide color indicator 

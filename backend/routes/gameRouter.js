@@ -73,6 +73,10 @@ router.post("/:gameId/settings", async (req, res, next) => {
       throw new Error("Login to change game settings.");
     }
 
+    if (!req.user.isAdmin) {
+      throw new Error("Forbidden!"); // TODO: Allow at some point
+    }
+
     const gameLogic = await GameLogic.get(req.params.gameId);
     await gameLogic.setSettings(req.body);
     res.sendStatus(200);
@@ -124,6 +128,11 @@ router.post("/:gameId/start", async (req, res, next) => {
     if (!req.user) {
       throw new Error("Login to start game.");
     }
+
+    if (!req.user.isAdmin) {
+      throw new Error("Forbidden!"); // TODO: Allow at some point
+    }
+
     const gameLogic = await GameLogic.get(req.params.gameId);
     await gameLogic.startGame();
     res.sendStatus(200);
@@ -178,15 +187,31 @@ router.post("/:gameId/removePendingStone", async (req, res, next) => {
 });
 
 router.post("/:gameId/haltTurn", async (req, res, next) => {
-  const gameLogic = await GameLogic.get(req.params.gameId);
-  await gameLogic.haltTurn();
-  res.sendStatus(200);
+  try {
+    if (!req.user || !req.user.isAdmin) {
+      throw new Error("Forbidden!"); // TODO: Allow at some point
+    }
+
+    const gameLogic = await GameLogic.get(req.params.gameId);
+    await gameLogic.haltTurn();
+    res.sendStatus(200);
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.post("/:gameId/endTurn", async (req, res, next) => {
-  const gameLogic = await GameLogic.get(req.params.gameId);
-  await gameLogic.forceTurnChange();
-  res.sendStatus(200);
+  try {
+    if (!req.user || !req.user.isAdmin) {
+      throw new Error("Forbidden!"); // TODO: Allow at some point
+    }
+
+    const gameLogic = await GameLogic.get(req.params.gameId);
+    await gameLogic.forceTurnChange();
+    res.sendStatus(200);
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;

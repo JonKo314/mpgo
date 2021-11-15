@@ -30,8 +30,12 @@
   <div v-if="started">
     <span v-if="turnEnd">Time left: {{ timeLeft }}</span>
     <span>Turn {{ turnCounter }}</span>
-    <button v-if="user" type="button" v-on:click="haltTurn()">Halt turn</button>
-    <button v-if="user" type="button" v-on:click="endTurn()">End turn</button>
+    <button v-if="user && user.isAdmin" type="button" v-on:click="haltTurn()">
+      Halt turn
+    </button>
+    <button v-if="user && user.isAdmin" type="button" v-on:click="endTurn()">
+      End turn
+    </button>
   </div>
   <BoardView v-if="started" />
 </template>
