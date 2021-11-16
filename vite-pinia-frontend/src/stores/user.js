@@ -5,11 +5,12 @@ export const useStore = defineStore("user", {
   state: () => {
     return { user: null };
   },
+
   actions: {
-    async register(username, password) {
+    async register(username, password, invitation) {
       this.user = await fetch("register", {
         method: "POST",
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, invitation }),
       });
     },
 

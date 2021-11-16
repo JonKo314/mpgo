@@ -14,13 +14,8 @@
     password.value = "";
   };
 
-  const login = () => {
-    store.login(username.value, password.value);
-    clearCredentials();
-  };
-
-  const register = () => {
-    store.register(username.value, password.value);
+  const login = async () => {
+    await store.login(username.value, password.value);
     clearCredentials();
   };
 </script>
@@ -36,9 +31,5 @@
       <input type="password" v-model="password" />
     </label>
     <button type="button" v-on:click="login()">Login</button>
-    <button type="button" v-on:click="register()">Register</button>
-    <h3 v-if="user" v-bind:style="`color: ${user.color}`">
-      Hi {{ user.name }}
-    </h3>
   </div>
 </template>

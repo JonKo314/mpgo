@@ -11,6 +11,7 @@ const saltRounds = 10;
 
 const gameRouter = require("./routes/gameRouter");
 const User = require("./models/user");
+const Invitation = require("./models/invitation");
 const Notifications = require("./notifications");
 
 // Source: https://github.com/passport/express-4.x-local-example/blob/master/server.js
@@ -103,11 +104,25 @@ app.get("/logout", function (req, res) {
 
 app.post("/register", async (req, res, next) => {
   try {
+    if (req.user) {
+      throw new Error("Logout to register");
+    }
+
+    const invitation = await Invitation.findById(req.body.invitation);
+    if (!invitation || invitation.usedAt) {
+      throw new Error("Invalid invitation");
+    }
+
     const credentials = req.body;
     if (await User.findOne({ name: credentials.username })) {
       // TODO: Restrict registration attempts to prevent automated testing for used names
       throw new Error("Username already taken.");
     }
+
+    invitation.usedAt = new Date();
+    await invitation.save();
+    // Invitation is now invalid, even if there's an error after this save
+    // TODO: Use transactions (sessions?) instead
 
     const user = await new User({
       name: credentials.username,
@@ -117,6 +132,9 @@ app.post("/register", async (req, res, next) => {
       // isAdmin defaults to: false
     }).save();
     delete user._doc.passwordHash;
+
+    invitation.user = user;
+    invitation.save();
 
     req.logIn(user, function (err) {
       if (err) {
@@ -128,6 +146,27 @@ app.post("/register", async (req, res, next) => {
   } catch (err) {
     return next(err);
   }
+});
+
+app.get("/invitations", async (req, res, next) => {
+  if (!req.user || !req.user.isAdmin) {
+    return res.sendStatus(403);
+  }
+
+  res.json(await Invitation.find().populate("creator").populate("user"));
+});
+
+app.post("/invitations/create", async (req, res, next) => {
+  if (!req.user || !req.user.isAdmin) {
+    return res.sendStatus(403);
+  }
+
+  const invitation = new Invitation({
+    creator: req.user,
+    createdAt: new Date(),
+  });
+  await invitation.save();
+  res.json(invitation);
 });
 
 app.post("/setColors", async (req, res, next) => {
