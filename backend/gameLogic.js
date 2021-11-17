@@ -128,6 +128,12 @@ class GameLogic {
   }
 
   async updatePlayers(players) {
+    if (this.game.started) {
+      // For now just forbid all changes
+      // Like this players can't troll by changing colors mid-game.
+      throw new Error("Not allowed to update players once game has started.");
+    }
+
     players.forEach((player) => {
       Object.assign(this.game.players.id(player), player);
     });
@@ -141,6 +147,11 @@ class GameLogic {
     }
     this.game.started = true;
     this.game.turnEnd = new Date(Date.now() + this.game.turnTime);
+
+    this.game.players = this.game.players.filter(
+      (player) => player.confirmedByAdmin
+    );
+
     await this.game.save();
     this.notifyObservers();
 

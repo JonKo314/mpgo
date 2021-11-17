@@ -59,8 +59,25 @@
     </button>
   </div>
   <ul>
-    <li v-for="somePlayer in players" v-bind:key="somePlayer._id">
-      <span>{{ somePlayer._id }}</span>
+    <li
+      v-for="somePlayer in players"
+      v-bind:key="somePlayer._id"
+      v-bind:class="{ unconfirmedPlayer: !somePlayer.confirmedByAdmin }"
+    >
+      <span v-if="user && user.isAdmin">
+        <button
+          v-if="!somePlayer.confirmedByAdmin"
+          type="button"
+          v-on:click="store.confirmPlayer(somePlayer)"
+        >
+          Confirm
+        </button>
+        <button v-else type="button" v-on:click="store.kickPlayer(somePlayer)">
+          Kick
+        </button>
+      </span>
+
+      <span class="playerName">{{ somePlayer._id }}</span>
 
       <ColorIndicator
         v-bind:color="somePlayer.color"
@@ -82,3 +99,9 @@
   <button v-on:click="join()">Join</button>
   <button v-if="user && user.isAdmin" v-on:click="start()">Start</button>
 </template>
+
+<style scoped>
+  .unconfirmedPlayer .playerName {
+    color: gray;
+  }
+</style>

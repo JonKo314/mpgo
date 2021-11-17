@@ -71,6 +71,22 @@ export const useStore = defineStore("game", {
       });
     },
 
+    async confirmPlayer(player) {
+      player.confirmedByAdmin = true;
+      await fetch(`games/${this.gameId}/updatePlayer`, {
+        method: "POST",
+        body: JSON.stringify(player),
+      });
+    },
+
+    async kickPlayer(player) {
+      player.confirmedByAdmin = false;
+      await fetch(`games/${this.gameId}/updatePlayer`, {
+        method: "POST",
+        body: JSON.stringify(player),
+      });
+    },
+
     async startGame() {
       await fetch(`games/${this.gameId}/start`, { method: "POST" });
     },

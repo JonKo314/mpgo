@@ -85,6 +85,25 @@ router.post("/:gameId/settings", async (req, res, next) => {
   }
 });
 
+router.post("/:gameId/updatePlayer", async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new Error("Login to change game settings.");
+    }
+
+    if (!req.user.isAdmin) {
+      throw new Error("Forbidden!"); // TODO: Allow at some point
+    }
+
+    // TODO: Restrict changes before opening to other users
+    // Currently only admins may update and those are trusted
+    const gameLogic = await GameLogic.get(req.params.gameId);
+    await gameLogic.updatePlayers([req.body]);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.post("/:gameId/colors", async (req, res, next) => {
   try {
     if (!req.user) {

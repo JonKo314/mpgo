@@ -7,6 +7,7 @@ const PlayerSchema = new mongoose.Schema({
   color: { type: String, required: true, match: /^#[0-9a-fA-F]{6}$/ },
   secondaryColor: { type: String, required: true, match: /^#[0-9a-fA-F]{6}$/ },
   stones: [StoneSchema],
+  confirmedByAdmin: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Player", PlayerSchema);
