@@ -1,3 +1,5 @@
+const config = require("../config");
+
 const express = require("Express");
 const mongoose = require("mongoose");
 const logger = require("morgan");
@@ -5,7 +7,7 @@ const bcrypt = require("bcrypt");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const path = require("path");
-const http = require("http");
+const fs = require("fs");
 
 const saltRounds = 10;
 
@@ -65,7 +67,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       sameSite: "strict",
-      // secure: true, TODO: HTTPS needed
+      secure: "auto", // TODO: See https://www.npmjs.com/package/express-session
     },
   })
 );
@@ -209,7 +211,14 @@ db.once("open", async () => {
   console.log("MongoDB connection opened");
 });
 
-const server = http.createServer(app);
+const createHttpServer = () => require("http").createServer(app);
+const createHttpsServer = () => {
+  const key = fs.readFileSync(config.ssl.key);
+  const cert = fs.readFileSync(config.ssl.cert);
+  return require("https").createServer({ key, cert }, app);
+};
+
+const server = config.ssl.enabled ? createHttpsServer() : createHttpServer();
 Notifications(server);
 
 server.listen(port, () => {

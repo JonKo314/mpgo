@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import config from "../config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -8,13 +9,19 @@ export default defineConfig({
     port: 8080,
     proxy: {
       "/api": {
-        target: "http://localhost:3000/",
+        secure: config.ssl.secure,
+        target: config.ssl.enabled
+          ? "https://localhost:3000"
+          : "http://localhost:3000/",
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ""),
       },
 
       "/ws": {
-        target: "ws://localhost:3000",
+        secure: config.ssl.secure,
+        target: config.ssl.enabled
+          ? "wss://localhost:3000"
+          : "ws://localhost:3000",
         ws: true,
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/ws/, ""),
