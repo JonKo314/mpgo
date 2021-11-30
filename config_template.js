@@ -6,6 +6,7 @@ const path = require("path");
 // 3. Change the config object so it fits your needs
 
 const config = {
+  expressSessionSecret: "currently NOT A SECRET", // See https://www.npmjs.com/package/express-session
   ssl: {
     enabled: true, // set to false for http
     secure: true, // set to false for self-signed certificates

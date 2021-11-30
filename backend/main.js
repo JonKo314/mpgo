@@ -62,7 +62,7 @@ app.use(express.json());
 
 app.use(
   require("express-session")({
-    secret: "granular synthesis",
+    secret: config.expressSessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
