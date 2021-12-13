@@ -7,8 +7,6 @@
     - drastically limit access for unauthenticated clients (less legal worries)
     - rudimentary report system to get my attention (via github?)
     - legal considerations
-    > Hash passwords on client side
-    ? HTTPS
 
 - lift restrictions for unauthenticated clients and non-admin users (legal considerations)
 - limit player count

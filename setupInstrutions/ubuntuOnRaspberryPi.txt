@@ -1,0 +1,18 @@
+1. Setup OS
+2. Install NodeJS
+3. Install and run MongoDB (need to use 4.4 for Raspberry PI or build 5.0)
+4. Get project source code
+5. Install node packages
+	a) On RaspberryPi 4 + Ubuntu Server 20.04 installing bcrypt fails
+	   Apparently bcrypt needs to be compiled, as no matching pre-compiled version exists
+		i) apt get g++, make, python (python2?)
+6. Create local config.js
+7. add host: "0.0.0.0" to server in vite.config.js (exposes frontend in (W)LAN)
+8. setup *.service files for frontend and backend and start via systemctl (systemd)
+9. Create ssl certificate
+	a) Self-signed
+		i) openssl req -x509 -newkey rsa:4096 -keyout keytemp.pem -out cert.pem -sha256 -days 365 -subj '/CN=192.x.y.z'
+		ii) openssl rsa -in keytemp.pem -out key.pem
+		iii) rm keytemp.pem
+	b) Proper certificate by trusted authority
+10. Add cert and key to vite.config.js
