@@ -199,11 +199,7 @@ app.post("/setColors", async (req, res, next) => {
   }
 });
 
-mongoose.connect("mongodb://localhost/mpgo", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
-});
+mongoose.connect("mongodb://localhost/mpgo");
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
