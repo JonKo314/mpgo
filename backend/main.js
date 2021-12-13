@@ -1,6 +1,6 @@
 const config = require("../config");
 
-const express = require("Express");
+const express = require("express");
 const mongoose = require("mongoose");
 const logger = require("morgan");
 const bcrypt = require("bcrypt");
