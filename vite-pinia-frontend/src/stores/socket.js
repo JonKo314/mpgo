@@ -17,7 +17,8 @@ export const useStore = defineStore("socket", {
       }
 
       // TODO: Which WebSocket URL if not running in development mode on localhost?
-      const socket = new WebSocket(`ws://${window.location.host}/ws`);
+      const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+      const socket = new WebSocket(`${protocol}://${window.location.host}/ws/`);
       socket.onopen = () => {
         this.connected = true;
         this.sendQueue();
