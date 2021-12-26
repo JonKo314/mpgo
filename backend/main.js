@@ -26,7 +26,6 @@ passport.use(
       const passwordHash = user
         ? user.passwordHash
         : `$2b$${saltRounds}$TakeSomeTimeToCheckEvenIfUsernameIsWrong1234567890123`;
-      delete user._doc.passwordHash;
 
       if (!(await bcrypt.compare(password, passwordHash)) || !user) {
         return callback(null, false, {
@@ -34,6 +33,7 @@ passport.use(
         });
       }
 
+      delete user._doc.passwordHash;
       return callback(null, user);
     } catch (err) {
       return callback(err);
