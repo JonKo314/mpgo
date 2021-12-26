@@ -5,11 +5,7 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 console.log("Connection to database...");
-mongoose.connect("mongodb://localhost/mpgo", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
-});
+mongoose.connect("mongodb://localhost/mpgo");
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
