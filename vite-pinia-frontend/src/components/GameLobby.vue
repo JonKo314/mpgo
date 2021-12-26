@@ -9,14 +9,22 @@
   const store = useStore();
   const { players } = storeToRefs(store);
 
+  const settings = reactive({
+    boardSize: store.boardSize,
+    turnTime: store.turnTime ? store.turnTime / 1000 : null,
+  });
+
+  store.$subscribe((mutation, state) => {
+    settings.boardSize = state.boardSize;
+    settings.turnTime = state.turnTime ? state.turnTime / 1000 : null;
+  });
+
   const playerStore = usePlayerStore();
   const { player } = storeToRefs(playerStore);
   playerStore.ready();
 
   const userStore = useUserStore();
   const { user } = storeToRefs(userStore);
-
-  const settings = reactive({ boardSize: null, turnTime: null });
 
   // TODO: Directly call store actions in template
   const saveSettings = () => {
