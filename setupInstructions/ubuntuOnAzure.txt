@@ -1,0 +1,12 @@
+1. Setup VM and open necessary ports
+2. Install NodeJS and NGINX
+3. Install and run MongoDB
+4. Get project source code
+5. Install node packages
+6. Create local config.js
+7. Set azure DNS and use certbot to create Let's Encrypt-certificate and automatically change nginx config
+8. setup *.service file for backend and start/enable via systemctl (systemd)
+9. Configure nginx
+	1. Remove default server listening on port 80 (will use certbots redirect instead)
+	2. proxy pass /api/ and /ws/ to backend (slashes in URLs might be important)
+	3. Build frontend and serve dist folder statically

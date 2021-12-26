@@ -8,8 +8,13 @@
     - rudimentary report system to get my attention (via github?)
     - legal considerations
 
+- setup shareable virtualization of whole project (docker, vagrant on virtualbox)
+    - https to nginx
+    - nginx proxy pass to backend and frontend
+    - frontend either static (built) or running on dev server (need to fix websockets)
+    - Fix websockets when runnning frontend dev server behind nginx
 - lift restrictions for unauthenticated clients and non-admin users (legal considerations)
-- limit player count
+- add game setting to limit player count
 - Persist user sessions
 - game analysis (investigate variations)
 - game names
