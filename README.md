@@ -1,4 +1,4 @@
-I've built a prototype that allows to [play Parallel Multiplayer Go online](https://mpgo.westeurope.cloudapp.azure.com/).
+I've built a prototype that allows to [play Parallel Multiplayer Go online](https://mpgo.westeurope.cloudapp.azure.com/) a [variant](https://en.wikipedia.org/wiki/Go_variants#Multi-player_Go) of the ancient game of [Go](https://en.wikipedia.org/wiki/Go_(game)) (aka Weiqi, Baduk).
 
 **Basics**
 * *Multiplayer*: It's possible to create games with more than two players. Each player is on their own and has a distinct color.
