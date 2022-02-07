@@ -1,6 +1,6 @@
 {
   "name": "@mpgo/backend",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Backend for mpgo",
   "main": "main.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "debug-vscode-win": "npm run devstart"
   },
   "author": "",
-  "license": "ISC",
+  "license": "AGPL-3.0",
   "dependencies": {
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
