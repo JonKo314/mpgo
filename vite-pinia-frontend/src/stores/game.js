@@ -57,8 +57,8 @@ export const useStore = defineStore("game", {
       }
 
       const millisecondsUntilClockUpdate =
-        this.millisecondsLeft > 6e5
-          ? this.millisecondsLeft % 6e5
+        this.millisecondsLeft > 36e5
+          ? this.millisecondsLeft % 6e4
           : this.millisecondsLeft % 1e3;
 
       setTimeout(this.updateMillisecondsLeft, millisecondsUntilClockUpdate);
