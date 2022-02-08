@@ -99,6 +99,7 @@ router.post("/:gameId/updatePlayer", async (req, res, next) => {
     // Currently only admins may update and those are trusted
     const gameLogic = await GameLogic.get(req.params.gameId);
     await gameLogic.updatePlayers([req.body]);
+    res.sendStatus(200);
   } catch (error) {
     next(error);
   }
@@ -115,6 +116,8 @@ router.post("/:gameId/colors", async (req, res, next) => {
     if (!player) {
       throw new Error("Join game to change player colors.");
     }
+
+    // TODO: Prevent change of colors after game started.
 
     await gameLogic.updatePlayers([
       {
