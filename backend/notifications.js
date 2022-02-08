@@ -36,6 +36,13 @@ class Notifications {
         console.log(`Someone wants to unsubscribe from game ${json.id}`);
         this.unsubscribe(json.id, socket);
         socket.send(JSON.stringify({ ...json, ...{ done: true } }));
+      } else if (json.action === "ping") {
+        socket.send(
+          JSON.stringify({
+            ...json,
+            ...{ action: "pong", pongTime: Date.now() },
+          })
+        );
       } else {
         console.log("received: %s", message);
         socket.send(`Server is unable to handle your message:\n${message}`);

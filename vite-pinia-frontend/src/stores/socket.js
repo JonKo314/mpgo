@@ -7,6 +7,7 @@ export const useStore = defineStore("socket", {
       connected: false,
       gameSubscriptions: new Map(),
       queue: [],
+      serverTimeDifference: 0,
     };
   },
 
@@ -22,6 +23,7 @@ export const useStore = defineStore("socket", {
       socket.onopen = () => {
         this.connected = true;
         this.sendQueue();
+        this.ping();
       };
       socket.onerror = (error) => console.warn(error);
       socket.onmessage = (message) => this.handleMessage(message);
@@ -53,6 +55,10 @@ export const useStore = defineStore("socket", {
       }
     },
 
+    ping() {
+      this.send(JSON.stringify({ action: "ping", pingTime: Date.now() }));
+    },
+
     sendQueue() {
       this.queue.forEach((message) => this.socket.send(message));
       this.queue.length = 0;
@@ -66,6 +72,19 @@ export const useStore = defineStore("socket", {
           this.gameSubscriptions.has(json.id)
         ) {
           this.gameSubscriptions.get(json.id).forEach((callback) => callback());
+        } else if (json.action === "pong") {
+          const timePassed = Date.now() - json.pingTime;
+          if (
+            timePassed < 500 ||
+            !confirm(
+              "Couldn't establish time difference between server and client. Do you want to retry?"
+            )
+          ) {
+            this.serverTimeDifference =
+              json.pongTime - json.pingTime + timePassed / 2;
+          } else {
+            this.ping();
+          }
         } else {
           console.log(`Unhandled json from socket:`);
           console.log(json);

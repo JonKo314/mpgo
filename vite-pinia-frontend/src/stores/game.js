@@ -50,8 +50,11 @@ export const useStore = defineStore("game", {
 
     updateMillisecondsLeft() {
       const MAX_DATE = new Date(8640000000000000);
+      const { serverTimeDifference } = useSocketStore();
       this.millisecondsLeft =
-        this.turnEnd < MAX_DATE ? this.turnEnd - new Date() : Infinity;
+        this.turnEnd < MAX_DATE
+          ? this.turnEnd - new Date() - serverTimeDifference
+          : Infinity;
       if (this.millisecondsLeft <= 0 || this.millisecondsLeft === Infinity) {
         return;
       }
