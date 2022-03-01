@@ -32,6 +32,7 @@ export const useStore = defineStore("player", {
         if (this.userId !== userId) {
           this.userId = userId;
           this.update();
+          gameStore.update();
         }
       });
 

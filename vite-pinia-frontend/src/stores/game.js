@@ -29,8 +29,11 @@ export const useStore = defineStore("game", {
         this.$reset();
         this.gameId = gameId;
       }
-      this.getGameState();
-      this.getStones();
+
+      if (this.gameId) {
+        this.getGameState();
+        this.getStones();
+      }
     },
 
     async getGameState() {
