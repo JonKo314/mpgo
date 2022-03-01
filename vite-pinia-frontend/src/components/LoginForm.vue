@@ -18,6 +18,11 @@
     await store.login(username.value, password.value);
     clearCredentials();
   };
+
+  const guestLogin = async () => {
+    await store.guestLogin();
+    clearCredentials();
+  };
 </script>
 
 <template>
@@ -31,5 +36,6 @@
       <input type="password" v-model="password" />
     </label>
     <button type="button" v-on:click="login()">Login</button>
+    <button type="button" v-on:click="guestLogin()">Login as guest</button>
   </div>
 </template>

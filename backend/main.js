@@ -6,13 +6,16 @@ const logger = require("morgan");
 const bcrypt = require("bcrypt");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
+const CustomStrategy = require("passport-custom").Strategy;
 const path = require("path");
 const fs = require("fs");
 
 const saltRounds = 10;
 
 const gameRouter = require("./routes/gameRouter");
-const User = require("./models/user");
+const User = require("./models/users/user");
+const LocalUser = require("./models/users/local");
+const GuestUser = require("./models/users/guest");
 const Invitation = require("./models/invitation");
 const Notifications = require("./notifications");
 
@@ -20,7 +23,7 @@ const Notifications = require("./notifications");
 passport.use(
   new LocalStrategy(async function (username, password, callback) {
     try {
-      const user = await User.findOne({ name: username }).select(
+      const user = await LocalUser.findOne({ name: username }).select(
         "+passwordHash"
       );
       const passwordHash = user
@@ -38,6 +41,21 @@ passport.use(
     } catch (err) {
       return callback(err);
     }
+  })
+);
+
+passport.use(
+  "guest",
+  new CustomStrategy(async function (req, callback) {
+    let user = await GuestUser.findOne({ token: req.session.id });
+    if (!user) {
+      user = await new GuestUser({
+        token: req.session.id,
+        color: "#123456",
+        secondaryColor: "#fedcba",
+      }).save();
+    }
+    return callback(null, user);
   })
 );
 
@@ -77,7 +95,26 @@ app.use(passport.session());
 app.use("/games", gameRouter);
 
 app.post("/login", function (req, res, next) {
-  passport.authenticate("local", function (err, user, info) {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return next(new Error(info.message));
+    }
+
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+
+      return res.json(user);
+    });
+  })(req, res, next);
+});
+
+app.post("/guestLogin", function (req, res, next) {
+  passport.authenticate("guest", (err, user, info) => {
     if (err) {
       return next(err);
     }
@@ -116,7 +153,7 @@ app.post("/register", async (req, res, next) => {
     }
 
     const credentials = req.body;
-    if (await User.findOne({ name: credentials.username })) {
+    if (await LocalUser.findOne({ name: credentials.username })) {
       // TODO: Restrict registration attempts to prevent automated testing for used names
       throw new Error("Username already taken.");
     }
@@ -126,7 +163,7 @@ app.post("/register", async (req, res, next) => {
     // Invitation is now invalid, even if there's an error after this save
     // TODO: Use transactions (sessions?) instead
 
-    const user = await new User({
+    const user = await new LocalUser({
       name: credentials.username,
       passwordHash: await bcrypt.hash(credentials.password, saltRounds),
       color: "#123456",

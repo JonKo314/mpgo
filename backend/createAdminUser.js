@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-const User = require("./models/user");
+const User = require("./models/users/user");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 

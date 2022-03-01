@@ -21,6 +21,11 @@ export const useStore = defineStore("user", {
       });
     },
 
+    async guestLogin() {
+      this.user = await fetch("guestLogin", { method: "POST" });
+      this.user.name = "guest";
+    },
+
     async logout() {
       await fetch("logout");
       this.$reset();

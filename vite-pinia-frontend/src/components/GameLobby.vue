@@ -86,6 +86,7 @@
       </span>
 
       <span class="playerName">{{ somePlayer._id }}</span>
+      <span v-if="somePlayer.userKind === 'GuestUser'">(guest)</span>
 
       <ColorIndicator
         v-bind:color="somePlayer.color"
