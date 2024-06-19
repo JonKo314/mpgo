@@ -1,3 +1,5 @@
+:no_entry: [DISCONTINUED] Alternative approach at https://github.com/govariantsteam/govariants
+
 I've built a prototype that allows to [play Parallel Multiplayer Go online](https://mpgo.westeurope.cloudapp.azure.com/) a [variant](https://en.wikipedia.org/wiki/Go_variants#Multi-player_Go) of the ancient game of [Go](https://en.wikipedia.org/wiki/Go_(game)) (aka Weiqi, Baduk).
 
 **Basics**
